@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Activity, Brain, Weight, Download, FileText, Camera, Pill } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -249,7 +249,7 @@ export default function Insights() {
             <CardContent>
               <div ref={weightChartRef} className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={weightData}>
+                  <AreaChart data={weightData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis 
                       dataKey="displayDate" 
@@ -268,15 +268,16 @@ export default function Insights() {
                         color: '#F9FAFB'
                       }}
                     />
-                    <Line 
+                    <Area 
                       type="monotone" 
                       dataKey="weight" 
                       stroke="#F59E0B" 
+                      fill="#F59E0B"
+                      fillOpacity={0.2}
                       strokeWidth={3}
-                      dot={{ fill: '#F59E0B', strokeWidth: 2, r: 5 }}
                       name="Weight (kg)"
                     />
-                  </LineChart>
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
