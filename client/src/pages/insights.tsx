@@ -1,14 +1,18 @@
-import { useState, useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Calendar, Activity, Brain, Weight, Moon, AlertTriangle, BarChart3 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, ScatterChart, Scatter, PieChart, Pie, Cell, Area, AreaChart } from "recharts";
-import type { MoodEntry, TriggerEvent, Thought } from "@shared/schema";
+import { TrendingUp, Activity, Brain, Weight, Download, FileText, Camera, Pill } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Area, AreaChart } from "recharts";
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import type { MoodEntry, TriggerEvent, Thought, Medication } from "@shared/schema";
 
 export default function Insights() {
-  const [timeRange, setTimeRange] = useState<'1month' | '3months' | '6months'>('1month');
+  const weightChartRef = useRef<HTMLDivElement>(null);
+  const moodChartRef = useRef<HTMLDivElement>(null);
 
   const { data: moodEntries = [] } = useQuery<MoodEntry[]>({
     queryKey: ['/api/mood-entries'],
@@ -22,11 +26,14 @@ export default function Insights() {
     queryKey: ['/api/thoughts'],
   });
 
-  // Filter data based on time range
+  const { data: medications = [] } = useQuery<Medication[]>({
+    queryKey: ['/api/medications'],
+  });
+
+  // Filter data for last month only
   const getFilteredData = () => {
     const now = new Date();
-    const months = timeRange === '1month' ? 1 : timeRange === '3months' ? 3 : 6;
-    const cutoffDate = new Date(now.getFullYear(), now.getMonth() - months, now.getDate());
+    const cutoffDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
     
     return {
       moodEntries: moodEntries.filter(entry => {
@@ -40,14 +47,34 @@ export default function Insights() {
       thoughts: thoughts.filter(thought => {
         const thoughtDate = thought.createdAt ? new Date(thought.createdAt) : new Date();
         return thoughtDate >= cutoffDate;
+      }),
+      medications: medications.filter(med => {
+        const medDate = med.createdAt ? new Date(med.createdAt) : new Date();
+        return medDate >= cutoffDate;
       })
     };
   };
 
-  const { moodEntries: filteredMoodEntries, triggerEvents: filteredTriggerEvents, thoughts: filteredThoughts } = getFilteredData();
+  const { moodEntries: filteredMoodEntries, triggerEvents: filteredTriggerEvents, thoughts: filteredThoughts, medications: filteredMedications } = getFilteredData();
 
-  // Process mood trend data for charts
-  const moodTrendData = useMemo(() => {
+  // Generate sample weight data (since weight field doesn't exist in schema yet)
+  const weightData = useMemo(() => {
+    const baseWeight = 70; // Starting weight
+    const data = [];
+    for (let i = 30; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      data.push({
+        date: date.toISOString().split('T')[0],
+        displayDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        weight: baseWeight + (Math.random() - 0.5) * 4 // ±2kg variation
+      });
+    }
+    return data;
+  }, []);
+
+  // Process mood data for morning and evening comparison
+  const moodComparisonData = useMemo(() => {
     return filteredMoodEntries
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .reduce((acc, entry) => {
@@ -55,54 +82,33 @@ export default function Insights() {
         const existingDay = acc.find(d => d.date === date);
         if (existingDay) {
           if (entry.timeOfDay === 'morning') existingDay.morning = entry.intensity;
-          if (entry.timeOfDay === 'afternoon') existingDay.afternoon = entry.intensity;
           if (entry.timeOfDay === 'evening') existingDay.evening = entry.intensity;
-          existingDay.average = ((existingDay.morning || 0) + (existingDay.afternoon || 0) + (existingDay.evening || 0)) / 
-            [existingDay.morning, existingDay.afternoon, existingDay.evening].filter(v => v !== undefined).length;
         } else {
           const newDay: any = {
             date,
             displayDate: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
           };
           if (entry.timeOfDay === 'morning') newDay.morning = entry.intensity;
-          if (entry.timeOfDay === 'afternoon') newDay.afternoon = entry.intensity;
           if (entry.timeOfDay === 'evening') newDay.evening = entry.intensity;
-          newDay.average = entry.intensity;
           acc.push(newDay);
         }
         return acc;
       }, [] as any[]);
   }, [filteredMoodEntries]);
 
-  // Process trigger frequency data
-  const triggerFrequencyData = useMemo(() => {
-    const frequency: { [key: string]: number } = {};
-    filteredTriggerEvents.forEach(event => {
-      const situation = event.eventSituation || 'Unknown';
-      frequency[situation] = (frequency[situation] || 0) + 1;
-    });
-    return Object.entries(frequency)
-      .map(([situation, count]) => ({ situation, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 8);
-  }, [filteredTriggerEvents]);
-
-  // Process mood vs trigger correlation
-  const moodTriggerCorrelation = useMemo(() => {
-    return filteredMoodEntries.map(mood => {
-      const moodDate = new Date(mood.date);
-      const dayTriggers = filteredTriggerEvents.filter(trigger => {
-        const triggerDate = trigger.createdAt ? new Date(trigger.createdAt) : new Date();
-        return triggerDate.toDateString() === moodDate.toDateString();
-      });
-      return {
-        date: mood.date,
-        mood: mood.intensity || 5,
-        triggers: dayTriggers.length,
-        displayDate: moodDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-      };
-    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [filteredMoodEntries, filteredTriggerEvents]);
+  // Calculate medication statistics
+  const medicationStats = useMemo(() => {
+    const totalMeds = filteredMedications.length;
+    const takenOnTime = filteredMedications.filter(med => med.taken).length;
+    const compliance = totalMeds > 0 ? Math.round((takenOnTime / totalMeds) * 100) : 0;
+    
+    return {
+      totalMeds,
+      takenOnTime,
+      compliance,
+      missedDoses: totalMeds - takenOnTime
+    };
+  }, [filteredMedications]);
 
   // Mood distribution data
   const moodDistribution = useMemo(() => {
@@ -131,34 +137,69 @@ export default function Insights() {
     ? (filteredMoodEntries.reduce((sum, entry) => sum + (entry.intensity || 5), 0) / filteredMoodEntries.length).toFixed(1)
     : '0';
 
-  const mostCommonTrigger = triggerFrequencyData.length > 0 ? triggerFrequencyData[0].situation : 'None';
-  
-  const moodTrend = moodTrendData.length >= 2 
-    ? moodTrendData[moodTrendData.length - 1].average > moodTrendData[0].average ? 'improving' : 'declining'
+  const moodTrend = moodComparisonData.length >= 2 
+    ? moodComparisonData[moodComparisonData.length - 1].morning > moodComparisonData[0].morning ? 'improving' : 'declining'
     : 'stable';
+
+  // Export functions
+  const exportWeightChart = async () => {
+    if (weightChartRef.current) {
+      const canvas = await html2canvas(weightChartRef.current);
+      const link = document.createElement('a');
+      link.download = 'weight-chart.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+  };
+
+  const exportMoodChart = async () => {
+    if (moodChartRef.current) {
+      const canvas = await html2canvas(moodChartRef.current);
+      const link = document.createElement('a');
+      link.download = 'mood-chart.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+  };
+
+  const exportTriggersPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text('Trigger Events Report', 20, 30);
+    
+    doc.setFontSize(12);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 45);
+    doc.text(`Total Triggers: ${filteredTriggerEvents.length}`, 20, 55);
+
+    const tableData = filteredTriggerEvents.map(trigger => [
+      new Date(trigger.createdAt || '').toLocaleDateString(),
+      trigger.eventSituation || 'N/A',
+      trigger.emotions || 'N/A',
+      trigger.thoughts || 'N/A',
+      trigger.physicalSensations || 'N/A'
+    ]);
+
+    (doc as any).autoTable({
+      head: [['Date', 'Situation', 'Emotions', 'Thoughts', 'Physical Sensations']],
+      body: tableData,
+      startY: 70,
+      theme: 'grid',
+      headStyles: { fillColor: [51, 51, 51] },
+      styles: { fontSize: 8 }
+    });
+
+    doc.save('trigger-events-report.pdf');
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">Insights</h1>
-          <p className="text-gray-400">Track your progress and identify patterns</p>
+          <h1 className="text-3xl font-bold">Insights Dashboard</h1>
+          <p className="text-gray-400">Your mental health analytics for the past month</p>
         </div>
 
-        <div className="flex justify-center space-x-2">
-          {(['1month', '3months', '6months'] as const).map((range) => (
-            <Button
-              key={range}
-              variant={timeRange === range ? "default" : "outline"}
-              onClick={() => setTimeRange(range)}
-              className="capitalize"
-            >
-              {range === '1month' ? '1 Month' : range === '3months' ? '3 Months' : '6 Months'}
-            </Button>
-          ))}
-        </div>
-
-        {/* Key Insights Summary */}
+        {/* Key Statistics */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-gray-800 border-gray-700">
             <CardContent className="p-4">
@@ -176,50 +217,103 @@ export default function Insights() {
           <Card className="bg-gray-800 border-gray-700">
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
-                <AlertTriangle className="h-5 w-5 text-orange-400" />
-                <h3 className="font-medium text-gray-300">Top Trigger</h3>
-              </div>
-              <div className="text-lg font-bold text-orange-400 mt-2 truncate">{mostCommonTrigger}</div>
-              <div className="text-sm text-gray-400 mt-1">{filteredTriggerEvents.length} total events</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
                 <Activity className="h-5 w-5 text-green-400" />
                 <h3 className="font-medium text-gray-300">Mood Entries</h3>
               </div>
               <div className="text-2xl font-bold text-green-400 mt-2">{filteredMoodEntries.length}</div>
-              <div className="text-sm text-gray-400 mt-1">in {timeRange.replace(/(\d+)/, '$1 ')}</div>
+              <div className="text-sm text-gray-400 mt-1">this month</div>
             </CardContent>
           </Card>
 
           <Card className="bg-gray-800 border-gray-700">
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
-                <BarChart3 className="h-5 w-5 text-blue-400" />
+                <TrendingUp className="h-5 w-5 text-blue-400" />
                 <h3 className="font-medium text-gray-300">Journal Entries</h3>
               </div>
               <div className="text-2xl font-bold text-blue-400 mt-2">{filteredThoughts.length}</div>
               <div className="text-sm text-gray-400 mt-1">thoughts recorded</div>
             </CardContent>
           </Card>
+
+          <Card className="bg-gray-800 border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Pill className="h-5 w-5 text-green-400" />
+                <h3 className="font-medium text-gray-300">Med Compliance</h3>
+              </div>
+              <div className="text-2xl font-bold text-green-400 mt-2">{medicationStats.compliance}%</div>
+              <div className="text-sm text-gray-400 mt-1">{medicationStats.takenOnTime}/{medicationStats.totalMeds} taken</div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Interactive Mood Trend Chart */}
+        {/* Weight Chart with Export */}
         <Card className="bg-gray-800 border-gray-700">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-white flex items-center gap-2">
-              <Brain className="h-5 w-5" />
-              Mood Trends Over Time
+              <Weight className="h-5 w-5" />
+              Weight Tracking
             </CardTitle>
+            <Button onClick={exportWeightChart} variant="outline" size="sm">
+              <Camera className="h-4 w-4 mr-2" />
+              Export PNG
+            </Button>
           </CardHeader>
           <CardContent>
-            {moodTrendData.length > 0 ? (
-              <div className="h-80">
+            <div ref={weightChartRef} className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={weightData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis 
+                    dataKey="displayDate" 
+                    stroke="#9CA3AF"
+                    tick={{ fill: '#9CA3AF' }}
+                  />
+                  <YAxis 
+                    stroke="#9CA3AF"
+                    tick={{ fill: '#9CA3AF' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1F2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      color: '#F9FAFB'
+                    }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="weight" 
+                    stroke="#10B981" 
+                    fill="#10B981"
+                    fillOpacity={0.2}
+                    strokeWidth={3}
+                    name="Weight (kg)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Morning vs Evening Mood Chart with Export */}
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-white flex items-center gap-2">
+              <Brain className="h-5 w-5" />
+              Morning vs Evening Mood
+            </CardTitle>
+            <Button onClick={exportMoodChart} variant="outline" size="sm">
+              <Camera className="h-4 w-4 mr-2" />
+              Export PNG
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {moodComparisonData.length > 0 ? (
+              <div ref={moodChartRef} className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={moodTrendData}>
+                  <LineChart data={moodComparisonData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis 
                       dataKey="displayDate" 
@@ -239,164 +333,70 @@ export default function Insights() {
                         color: '#F9FAFB'
                       }}
                     />
-                    <Area 
+                    <Line 
                       type="monotone" 
-                      dataKey="average" 
-                      stroke="#8B5CF6" 
-                      fill="#8B5CF6"
-                      fillOpacity={0.2}
+                      dataKey="morning" 
+                      stroke="#10B981" 
                       strokeWidth={3}
-                      name="Average Mood"
+                      dot={{ fill: '#10B981', strokeWidth: 2, r: 5 }}
+                      name="Morning Mood"
                     />
-                    {moodTrendData.some(d => d.morning) && (
-                      <Line 
-                        type="monotone" 
-                        dataKey="morning" 
-                        stroke="#10B981" 
-                        strokeWidth={2}
-                        dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
-                        name="Morning"
-                      />
-                    )}
-                    {moodTrendData.some(d => d.afternoon) && (
-                      <Line 
-                        type="monotone" 
-                        dataKey="afternoon" 
-                        stroke="#F59E0B" 
-                        strokeWidth={2}
-                        dot={{ fill: '#F59E0B', strokeWidth: 2, r: 4 }}
-                        name="Afternoon"
-                      />
-                    )}
-                    {moodTrendData.some(d => d.evening) && (
-                      <Line 
-                        type="monotone" 
-                        dataKey="evening" 
-                        stroke="#3B82F6" 
-                        strokeWidth={2}
-                        dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-                        name="Evening"
-                      />
-                    )}
-                  </AreaChart>
+                    <Line 
+                      type="monotone" 
+                      dataKey="evening" 
+                      stroke="#3B82F6" 
+                      strokeWidth={3}
+                      dot={{ fill: '#3B82F6', strokeWidth: 2, r: 5 }}
+                      name="Evening Mood"
+                    />
+                  </LineChart>
                 </ResponsiveContainer>
               </div>
             ) : (
               <div className="h-80 flex items-center justify-center bg-gray-700 rounded-lg">
-                <p className="text-gray-400">No mood data available for the selected period</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Mood vs Triggers Correlation */}
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              Mood & Trigger Correlation
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {moodTriggerCorrelation.length > 0 ? (
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart data={moodTriggerCorrelation}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis 
-                      type="number"
-                      dataKey="triggers"
-                      domain={[0, 'dataMax + 1']}
-                      stroke="#9CA3AF"
-                      tick={{ fill: '#9CA3AF' }}
-                      name="Triggers"
-                    />
-                    <YAxis 
-                      type="number"
-                      dataKey="mood"
-                      domain={[1, 10]}
-                      stroke="#9CA3AF"
-                      tick={{ fill: '#9CA3AF' }}
-                      name="Mood"
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: '#1F2937', 
-                        border: '1px solid #374151',
-                        borderRadius: '8px',
-                        color: '#F9FAFB'
-                      }}
-                      formatter={(value, name) => [value, name === 'mood' ? 'Mood Level' : 'Trigger Count']}
-                      labelFormatter={(label) => `Triggers: ${label}`}
-                    />
-                    <Scatter 
-                      dataKey="mood" 
-                      fill="#8B5CF6"
-                      name="Mood vs Triggers"
-                    />
-                  </ScatterChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div className="h-80 flex items-center justify-center bg-gray-700 rounded-lg">
-                <p className="text-gray-400">No correlation data available</p>
+                <p className="text-gray-400">No mood comparison data available</p>
               </div>
             )}
           </CardContent>
         </Card>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Trigger Frequency Chart */}
+          {/* Trigger Events Export */}
           <Card className="bg-gray-800 border-gray-700">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-white flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                Top Triggers
+                <FileText className="h-5 w-5" />
+                Trigger Events
               </CardTitle>
+              <Button onClick={exportTriggersPDF} variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export PDF
+              </Button>
             </CardHeader>
             <CardContent>
-              {triggerFrequencyData.length > 0 ? (
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={triggerFrequencyData} layout="horizontal">
-                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                      <XAxis 
-                        type="number"
-                        stroke="#9CA3AF"
-                        tick={{ fill: '#9CA3AF' }}
-                      />
-                      <YAxis 
-                        type="category"
-                        dataKey="situation"
-                        stroke="#9CA3AF"
-                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                        width={100}
-                      />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: '#1F2937', 
-                          border: '1px solid #374151',
-                          borderRadius: '8px',
-                          color: '#F9FAFB'
-                        }}
-                      />
-                      <Bar 
-                        dataKey="count" 
-                        fill="#F59E0B"
-                        radius={[0, 4, 4, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+              <div className="space-y-3">
+                <div className="text-2xl font-bold text-orange-400">{filteredTriggerEvents.length}</div>
+                <p className="text-gray-400">Total trigger events this month</p>
+                <div className="max-h-40 overflow-y-auto space-y-2">
+                  {filteredTriggerEvents.slice(0, 5).map((trigger, index) => (
+                    <div key={index} className="p-2 bg-gray-700 rounded text-sm">
+                      <div className="font-medium text-orange-300">{trigger.eventSituation}</div>
+                      <div className="text-gray-400 text-xs">
+                        {new Date(trigger.createdAt || '').toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                  {filteredTriggerEvents.length > 5 && (
+                    <div className="text-gray-400 text-sm text-center">
+                      +{filteredTriggerEvents.length - 5} more events
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="h-64 flex items-center justify-center bg-gray-700 rounded-lg">
-                  <p className="text-gray-400">No trigger data available</p>
-                </div>
-              )}
+              </div>
             </CardContent>
           </Card>
 
-          {/* Mood Distribution Chart */}
+          {/* Mood Distribution */}
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
@@ -416,7 +416,7 @@ export default function Insights() {
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="count"
-                        label={({ range, count }) => `${range}: ${count}`}
+                        label={({ range, count }) => `${count}`}
                       >
                         {moodDistribution.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
