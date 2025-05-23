@@ -23,8 +23,8 @@ export default function Dashboard() {
     queryFn: () => fetch('/api/thoughts').then(res => res.json()),
   });
 
-  const morningEntry = todaysMoodEntries.find(entry => entry.timeOfDay === 'morning');
-  const eveningEntry = todaysMoodEntries.find(entry => entry.timeOfDay === 'evening');
+  const morningEntry = Array.isArray(todaysMoodEntries) ? todaysMoodEntries.find(entry => entry.timeOfDay === 'morning') : undefined;
+  const eveningEntry = Array.isArray(todaysMoodEntries) ? todaysMoodEntries.find(entry => entry.timeOfDay === 'evening') : undefined;
 
   const getMoodEmoji = (mood: string) => {
     return MOOD_OPTIONS.find(option => option.value === mood)?.emoji || '😐';
