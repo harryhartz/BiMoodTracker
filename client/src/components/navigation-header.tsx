@@ -26,7 +26,7 @@ export default function NavigationHeader() {
           </div>
           
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-6">
+          <nav className="hidden md:flex space-x-6 items-center">
             {navItems.map((item) => (
               <button
                 key={item.href}
@@ -40,6 +40,14 @@ export default function NavigationHeader() {
                 {item.label}
               </button>
             ))}
+            <Button
+              onClick={() => navigate("/auth")}
+              variant="outline"
+              size="sm"
+              className="ml-4 border-primary text-primary hover:bg-primary hover:text-white"
+            >
+              Login
+            </Button>
           </nav>
 
           {/* Mobile Menu */}
@@ -64,6 +72,14 @@ export default function NavigationHeader() {
                     {item.label}
                   </button>
                 ))}
+                <Button
+                  onClick={() => navigate("/auth")}
+                  variant="outline"
+                  size="sm"
+                  className="mt-4 border-primary text-primary hover:bg-primary hover:text-white"
+                >
+                  Login
+                </Button>
               </nav>
             </SheetContent>
           </Sheet>
