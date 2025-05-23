@@ -380,8 +380,16 @@ export default function Insights() {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={moodTrendData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="displayDate" stroke="#9CA3AF" />
-                    <YAxis domain={[1, 5]} stroke="#9CA3AF" />
+                    <XAxis 
+                      dataKey="displayDate" 
+                      stroke="#9CA3AF" 
+                      label={{ value: 'Date', position: 'insideBottom', offset: -5 }}
+                    />
+                    <YAxis 
+                      domain={[1, 5]} 
+                      stroke="#9CA3AF"
+                      label={{ value: 'Mood Intensity (1-5)', angle: -90, position: 'insideLeft' }}
+                    />
                     <Tooltip 
                       contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151' }}
                       labelStyle={{ color: '#E5E7EB' }}
@@ -423,18 +431,24 @@ export default function Insights() {
               Trigger Patterns
             </CardTitle>
             <ExportDropdown 
-              onPDF={exportTriggersToPDF}
-              onCSV={() => exportToCSV(triggerPatternData, 'trigger_patterns')}
+              onPNG={() => exportChartAsPNG('trigger-patterns-chart', 'trigger_patterns')}
             />
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div id="trigger-patterns-chart" className="h-64">
               {triggerPatternData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={triggerPatternData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="emotion" stroke="#9CA3AF" />
-                    <YAxis stroke="#9CA3AF" />
+                    <XAxis 
+                      dataKey="emotion" 
+                      stroke="#9CA3AF"
+                      label={{ value: 'Emotion Type', position: 'insideBottom', offset: -5 }}
+                    />
+                    <YAxis 
+                      stroke="#9CA3AF"
+                      label={{ value: 'Frequency Count', angle: -90, position: 'insideLeft' }}
+                    />
                     <Tooltip 
                       contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151' }}
                       labelStyle={{ color: '#E5E7EB' }}
@@ -468,8 +482,15 @@ export default function Insights() {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={weightTrendData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="displayDate" stroke="#9CA3AF" />
-                    <YAxis stroke="#9CA3AF" />
+                    <XAxis 
+                      dataKey="displayDate" 
+                      stroke="#9CA3AF"
+                      label={{ value: 'Date', position: 'insideBottom', offset: -5 }}
+                    />
+                    <YAxis 
+                      stroke="#9CA3AF"
+                      label={{ value: 'Weight (kg)', angle: -90, position: 'insideLeft' }}
+                    />
                     <Tooltip 
                       contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151' }}
                       labelStyle={{ color: '#E5E7EB' }}
