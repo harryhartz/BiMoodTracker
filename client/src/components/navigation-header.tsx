@@ -41,12 +41,15 @@ export default function NavigationHeader() {
               </button>
             ))}
             <Button
-              onClick={() => navigate("/auth")}
+              onClick={() => {
+                // Clear any stored auth data and redirect to homepage
+                window.location.href = "/";
+              }}
               variant="outline"
               size="sm"
               className="ml-4 border-primary text-primary hover:bg-primary hover:text-white"
             >
-              Login
+              Logout
             </Button>
           </nav>
 
@@ -73,12 +76,15 @@ export default function NavigationHeader() {
                   </button>
                 ))}
                 <Button
-                  onClick={() => navigate("/auth")}
+                  onClick={() => {
+                    // Clear any stored auth data and redirect to homepage
+                    window.location.href = "/";
+                  }}
                   variant="outline"
                   size="sm"
                   className="mt-4 border-primary text-primary hover:bg-primary hover:text-white"
                 >
-                  Login
+                  Logout
                 </Button>
               </nav>
             </SheetContent>
