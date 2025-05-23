@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import bcrypt from "bcryptjs";
 import { storage } from "./storage";
 import { 
   insertMoodEntrySchema, insertTriggerEventSchema, 
@@ -7,11 +8,7 @@ import {
   insertUserSchema, loginSchema
 } from "@shared/schema";
 import { z } from "zod";
-import { authMiddleware } from "./middleware/auth";
-import { generateToken, hashPassword, comparePassword, formatUserResponse } from "./auth-helpers";
-
-// For development only - will be removed in production
-const DEMO_USER_ID = 1;
+import { authMiddleware, generateToken } from "./middleware/auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -28,7 +25,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash password
-      const hashedPassword = await hashPassword(data.password);
+      const hashedPassword = await bcrypt.hash(data.password, 10);
       
       // Create user
       const user = await storage.createUser({
@@ -39,8 +36,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate JWT token
       const token = generateToken(user.id);
 
-      // Format and send user response
-      res.json(formatUserResponse(user, token));
+      res.json({ 
+        id: user.id, 
+        username: user.username, 
+        email: user.email,
+        token
+      });
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ 
@@ -67,7 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify password
-      const isValidPassword = await comparePassword(data.password, user.password);
+      const isValidPassword = await bcrypt.compare(data.password, user.password);
       if (!isValidPassword) {
         return res.status(401).json({ message: "Invalid email or password" });
       }
@@ -75,8 +76,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate JWT token
       const token = generateToken(user.id);
 
-      // Format and send user response
-      res.json(formatUserResponse(user, token));
+      res.json({ 
+        id: user.id, 
+        username: user.username, 
+        email: user.email,
+        token
+      });
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ 
