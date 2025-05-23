@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Activity, Brain, Weight, Download, FileText, Camera, Pill } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Area, AreaChart } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -57,21 +57,17 @@ export default function Insights() {
 
   const { moodEntries: filteredMoodEntries, triggerEvents: filteredTriggerEvents, thoughts: filteredThoughts, medications: filteredMedications } = getFilteredData();
 
-  // Generate sample weight data (since weight field doesn't exist in schema yet)
+  // Weight data from actual mood entries (if weight field exists)
   const weightData = useMemo(() => {
-    const baseWeight = 70; // Starting weight
-    const data = [];
-    for (let i = 30; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      data.push({
-        date: date.toISOString().split('T')[0],
-        displayDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        weight: baseWeight + (Math.random() - 0.5) * 4 // ±2kg variation
-      });
-    }
-    return data;
-  }, []);
+    return filteredMoodEntries
+      .filter(entry => entry.weight) // Only entries with weight data
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .map(entry => ({
+        date: entry.date,
+        displayDate: new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        weight: entry.weight
+      }));
+  }, [filteredMoodEntries]);
 
   // Process mood data for morning and evening comparison
   const moodComparisonData = useMemo(() => {
@@ -96,41 +92,30 @@ export default function Insights() {
       }, [] as any[]);
   }, [filteredMoodEntries]);
 
-  // Calculate medication statistics
+  // Calculate medication statistics from mood entries
   const medicationStats = useMemo(() => {
-    const totalMeds = filteredMedications.length;
-    const takenOnTime = filteredMedications.filter(med => med.taken).length;
-    const compliance = totalMeds > 0 ? Math.round((takenOnTime / totalMeds) * 100) : 0;
+    // Get medication compliance data from morning and evening entries
+    const morningMeds = filteredMoodEntries.filter(entry => 
+      entry.timeOfDay === 'morning' && entry.morningMedication !== null
+    );
+    const eveningMeds = filteredMoodEntries.filter(entry => 
+      entry.timeOfDay === 'evening' && entry.eveningMedication !== null
+    );
+    
+    const totalMedChecks = morningMeds.length + eveningMeds.length;
+    const takenOnTime = morningMeds.filter(entry => entry.morningMedication === true).length + 
+                       eveningMeds.filter(entry => entry.eveningMedication === true).length;
+    const compliance = totalMedChecks > 0 ? Math.round((takenOnTime / totalMedChecks) * 100) : 0;
     
     return {
-      totalMeds,
+      totalMeds: totalMedChecks,
       takenOnTime,
       compliance,
-      missedDoses: totalMeds - takenOnTime
+      missedDoses: totalMedChecks - takenOnTime
     };
-  }, [filteredMedications]);
-
-  // Mood distribution data
-  const moodDistribution = useMemo(() => {
-    const distribution = [
-      { range: '1-2 (Very Low)', count: 0, color: '#EF4444' },
-      { range: '3-4 (Low)', count: 0, color: '#F97316' },
-      { range: '5-6 (Neutral)', count: 0, color: '#EAB308' },
-      { range: '7-8 (Good)', count: 0, color: '#22C55E' },
-      { range: '9-10 (Excellent)', count: 0, color: '#10B981' }
-    ];
-    
-    filteredMoodEntries.forEach(entry => {
-      const intensity = entry.intensity || 5;
-      if (intensity <= 2) distribution[0].count++;
-      else if (intensity <= 4) distribution[1].count++;
-      else if (intensity <= 6) distribution[2].count++;
-      else if (intensity <= 8) distribution[3].count++;
-      else distribution[4].count++;
-    });
-    
-    return distribution.filter(d => d.count > 0);
   }, [filteredMoodEntries]);
+
+
 
   // Calculate insights
   const averageMood = filteredMoodEntries.length > 0 
@@ -174,13 +159,13 @@ export default function Insights() {
     const tableData = filteredTriggerEvents.map(trigger => [
       new Date(trigger.createdAt || '').toLocaleDateString(),
       trigger.eventSituation || 'N/A',
-      trigger.emotions || 'N/A',
-      trigger.thoughts || 'N/A',
-      trigger.physicalSensations || 'N/A'
+      trigger.emotion || 'N/A',
+      trigger.actionTaken || 'N/A',
+      trigger.consequence || 'N/A'
     ]);
 
     (doc as any).autoTable({
-      head: [['Date', 'Situation', 'Emotions', 'Thoughts', 'Physical Sensations']],
+      head: [['Date', 'Situation', 'Emotion', 'Action Taken', 'Consequence']],
       body: tableData,
       startY: 70,
       theme: 'grid',
@@ -249,53 +234,54 @@ export default function Insights() {
         </div>
 
         {/* Weight Chart with Export */}
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-white flex items-center gap-2">
-              <Weight className="h-5 w-5" />
-              Weight Tracking
-            </CardTitle>
-            <Button onClick={exportWeightChart} variant="outline" size="sm">
-              <Camera className="h-4 w-4 mr-2" />
-              Export PNG
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div ref={weightChartRef} className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={weightData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis 
-                    dataKey="displayDate" 
-                    stroke="#9CA3AF"
-                    tick={{ fill: '#9CA3AF' }}
-                  />
-                  <YAxis 
-                    stroke="#9CA3AF"
-                    tick={{ fill: '#9CA3AF' }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1F2937', 
-                      border: '1px solid #374151',
-                      borderRadius: '8px',
-                      color: '#F9FAFB'
-                    }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="weight" 
-                    stroke="#10B981" 
-                    fill="#10B981"
-                    fillOpacity={0.2}
-                    strokeWidth={3}
-                    name="Weight (kg)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        {weightData.length > 0 && (
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-white flex items-center gap-2">
+                <Weight className="h-5 w-5" />
+                Weight Tracking
+              </CardTitle>
+              <Button onClick={exportWeightChart} variant="outline" size="sm">
+                <Camera className="h-4 w-4 mr-2" />
+                Export PNG
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div ref={weightChartRef} className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={weightData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis 
+                      dataKey="displayDate" 
+                      stroke="#9CA3AF"
+                      tick={{ fill: '#9CA3AF' }}
+                    />
+                    <YAxis 
+                      stroke="#9CA3AF"
+                      tick={{ fill: '#9CA3AF' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1F2937', 
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#F9FAFB'
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="weight" 
+                      stroke="#F59E0B" 
+                      strokeWidth={3}
+                      dot={{ fill: '#F59E0B', strokeWidth: 2, r: 5 }}
+                      name="Weight (kg)"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Morning vs Evening Mood Chart with Export */}
         <Card className="bg-gray-800 border-gray-700">
@@ -360,87 +346,40 @@ export default function Insights() {
           </CardContent>
         </Card>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Trigger Events Export */}
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-white flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Trigger Events
-              </CardTitle>
-              <Button onClick={exportTriggersPDF} variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Export PDF
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="text-2xl font-bold text-orange-400">{filteredTriggerEvents.length}</div>
-                <p className="text-gray-400">Total trigger events this month</p>
-                <div className="max-h-40 overflow-y-auto space-y-2">
-                  {filteredTriggerEvents.slice(0, 5).map((trigger, index) => (
-                    <div key={index} className="p-2 bg-gray-700 rounded text-sm">
-                      <div className="font-medium text-orange-300">{trigger.eventSituation}</div>
-                      <div className="text-gray-400 text-xs">
-                        {new Date(trigger.createdAt || '').toLocaleDateString()}
-                      </div>
+        {/* Trigger Events Export */}
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-white flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Trigger Events
+            </CardTitle>
+            <Button onClick={exportTriggersPDF} variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="text-2xl font-bold text-orange-400">{filteredTriggerEvents.length}</div>
+              <p className="text-gray-400">Total trigger events this month</p>
+              <div className="max-h-40 overflow-y-auto space-y-2">
+                {filteredTriggerEvents.slice(0, 5).map((trigger, index) => (
+                  <div key={index} className="p-2 bg-gray-700 rounded text-sm">
+                    <div className="font-medium text-orange-300">{trigger.eventSituation}</div>
+                    <div className="text-gray-400 text-xs">
+                      {new Date(trigger.createdAt || '').toLocaleDateString()}
                     </div>
-                  ))}
-                  {filteredTriggerEvents.length > 5 && (
-                    <div className="text-gray-400 text-sm text-center">
-                      +{filteredTriggerEvents.length - 5} more events
-                    </div>
-                  )}
-                </div>
+                  </div>
+                ))}
+                {filteredTriggerEvents.length > 5 && (
+                  <div className="text-gray-400 text-sm text-center">
+                    +{filteredTriggerEvents.length - 5} more events
+                  </div>
+                )}
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Mood Distribution */}
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Brain className="h-5 w-5" />
-                Mood Distribution
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {moodDistribution.length > 0 ? (
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={moodDistribution}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="count"
-                        label={({ range, count }) => `${count}`}
-                      >
-                        {moodDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: '#1F2937', 
-                          border: '1px solid #374151',
-                          borderRadius: '8px',
-                          color: '#F9FAFB'
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className="h-64 flex items-center justify-center bg-gray-700 rounded-lg">
-                  <p className="text-gray-400">No mood distribution data available</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
