@@ -15,10 +15,12 @@ export const moodEntries = pgTable("mood_entries", {
   timeOfDay: text("time_of_day").notNull(), // 'morning' | 'evening'
   mood: text("mood").notNull(),
   intensity: integer("intensity").notNull(), // 1-5
-  sleepQuality: integer("sleep_quality"), // 1-5
+  hoursSlept: real("hours_slept"), // For morning entries
+  sleepQuality: integer("sleep_quality"), // 1-5 for evening entries only
   weight: real("weight"),
   weightUnit: text("weight_unit").default("kg"),
-  medicationTaken: boolean("medication_taken").default(false),
+  morningMedication: boolean("morning_medication").default(false),
+  eveningMedication: boolean("evening_medication").default(false),
   energyLevel: integer("energy_level"), // 1-5 for evening entries
   reflectiveComment: text("reflective_comment"),
   overallDaySummary: text("overall_day_summary"),
@@ -70,10 +72,12 @@ export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({
   timeOfDay: z.enum(['morning', 'evening']),
   mood: z.string().min(1),
   intensity: z.number().min(1).max(5),
+  hoursSlept: z.number().positive().optional(),
   sleepQuality: z.number().min(1).max(5).optional(),
   weight: z.number().positive().optional(),
   weightUnit: z.enum(['kg', 'lbs']).default('kg'),
-  medicationTaken: z.boolean().default(false),
+  morningMedication: z.boolean().default(false),
+  eveningMedication: z.boolean().default(false),
   energyLevel: z.number().min(1).max(5).optional(),
   reflectiveComment: z.string().optional(),
   overallDaySummary: z.string().optional(),

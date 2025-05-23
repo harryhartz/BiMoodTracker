@@ -82,7 +82,7 @@ export default function Thoughts() {
   const filteredThoughts = thoughts.filter(thought => {
     const matchesSearch = searchQuery === '' || 
       thought.content.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesMood = filterMood === '' || 
+    const matchesMood = filterMood === '' || filterMood === 'all' || 
       (thought.moodTags && thought.moodTags.includes(filterMood));
     return matchesSearch && matchesMood;
   });
@@ -182,7 +182,7 @@ export default function Thoughts() {
                   <SelectValue placeholder="Filter by mood" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Moods</SelectItem>
+                  <SelectItem value="all">All Moods</SelectItem>
                   {MOOD_TAG_OPTIONS.map((mood) => (
                     <SelectItem key={mood.value} value={mood.value}>
                       {mood.emoji} {mood.label}

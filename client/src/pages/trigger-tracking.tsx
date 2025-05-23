@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Save, Clock, Edit } from "lucide-react";
+import { Save, Clock, Edit, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
@@ -20,6 +21,8 @@ const formSchema = insertTriggerEventSchema.omit({ userId: true });
 
 export default function TriggerTracking() {
   const [selectedActions, setSelectedActions] = useState<string[]>([]);
+  const [showCustomEmotion, setShowCustomEmotion] = useState(false);
+  const [customEmotion, setCustomEmotion] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -250,7 +253,7 @@ export default function TriggerTracking() {
                   <SelectValue placeholder="Filter by emotion" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Emotions</SelectItem>
+                  <SelectItem value="all">All Emotions</SelectItem>
                   {EMOTION_OPTIONS.map((emotion) => (
                     <SelectItem key={emotion.value} value={emotion.value}>
                       {emotion.emoji} {emotion.label}

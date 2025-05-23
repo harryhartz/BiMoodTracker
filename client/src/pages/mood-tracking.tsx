@@ -32,10 +32,12 @@ export default function MoodTracking() {
       timeOfDay: 'morning',
       mood: '',
       intensity: 3,
+      hoursSlept: undefined,
       sleepQuality: 3,
       weight: undefined,
       weightUnit: 'kg',
-      medicationTaken: false,
+      morningMedication: false,
+      eveningMedication: false,
       energyLevel: 3,
       reflectiveComment: '',
       overallDaySummary: '',
@@ -158,23 +160,48 @@ export default function MoodTracking() {
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Sleep Quality */}
-                <FormField
-                  control={form.control}
-                  name="sleepQuality"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <RatingScale
-                          label="Sleep Quality"
-                          value={field.value}
-                          onChange={field.onChange}
-                          color="accent"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                {/* Hours Slept (Morning only) */}
+                {entryType === 'morning' && (
+                  <FormField
+                    control={form.control}
+                    name="hoursSlept"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-slate-300">Hours Slept</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.5"
+                            placeholder="8"
+                            className="bg-slate-700 border-slate-600 text-white"
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
+                
+                {/* Sleep Quality (Evening only) */}
+                {entryType === 'evening' && (
+                  <FormField
+                    control={form.control}
+                    name="sleepQuality"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <RatingScale
+                            label="Sleep Quality (from last night)"
+                            value={field.value}
+                            onChange={field.onChange}
+                            color="accent"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 {/* Weight Entry (Morning only) */}
                 {entryType === 'morning' && (
@@ -243,27 +270,46 @@ export default function MoodTracking() {
                 )}
               </div>
 
-              {/* Medication Toggle */}
-              <FormField
-                control={form.control}
-                name="medicationTaken"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-300 mb-3 block">Medication Taken Today?</FormLabel>
-                    <FormControl>
-                      <div className="flex items-center space-x-4">
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                        <span className="text-slate-300">
-                          {field.value ? 'Yes' : 'No'}
-                        </span>
-                      </div>
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+              {/* Medication Toggles */}
+              <div>
+                <FormLabel className="text-slate-300 mb-3 block">Medication Taken Today?</FormLabel>
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="morningMedication"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <div className="flex items-center space-x-4">
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                            <span className="text-slate-300">Morning Medication</span>
+                          </div>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="eveningMedication"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <div className="flex items-center space-x-4">
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                            <span className="text-slate-300">Evening Medication</span>
+                          </div>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
 
               {/* Evening-specific fields */}
               {entryType === 'evening' && (
