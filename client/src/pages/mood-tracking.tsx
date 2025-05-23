@@ -1,18 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Sun, Moon, Save, Edit } from "lucide-react";
+import { Sun, Moon, Save, Edit, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import MoodSelector from "@/components/mood-selector";
 import RatingScale from "@/components/rating-scale";
-import { apiRequest } from "@/lib/queryClient";
+import FormError from "@/components/form-error";
+import ErrorBoundary from "@/components/error-boundary";
+import { api } from "@/lib/api";
 import { insertMoodEntrySchema } from "@shared/schema";
 import { getCurrentDate, formatTimeAgo, MOOD_OPTIONS } from "@/lib/constants";
 import type { MoodEntry, InsertMoodEntry } from "@shared/schema";
@@ -46,37 +49,76 @@ export default function MoodTracking() {
     },
   });
 
-  const { data: moodEntries = [] } = useQuery<MoodEntry[]>({
+  const [formError, setFormError] = useState<string | null>(null);
+  const isMobile = useIsMobile();
+
+  // Fetch mood entries with proper typing
+  const { 
+    data: moodEntries = [], 
+    isLoading: isLoadingEntries, 
+    error: entriesError 
+  } = useQuery({
     queryKey: ['/api/mood-entries'],
-    queryFn: () => fetch('/api/mood-entries').then(res => res.json()),
+    queryFn: async (): Promise<MoodEntry[]> => {
+      try {
+        return await api.get('/api/mood-entries');
+      } catch (error) {
+        console.error('Failed to fetch mood entries:', error);
+        toast({ 
+          title: "Error loading entries", 
+          description: error instanceof Error ? error.message : "Failed to load your mood entries", 
+          variant: "destructive" 
+        });
+        return [];
+      }
+    }
   });
 
   const createMoodEntry = useMutation({
-    mutationFn: (data: InsertMoodEntry) => apiRequest('POST', '/api/mood-entries', data),
+    mutationFn: (data: InsertMoodEntry) => api.post('/api/mood-entries', data),
     onSuccess: () => {
       toast({ title: "Success", description: "Mood entry saved successfully!" });
       queryClient.invalidateQueries({ queryKey: ['/api/mood-entries'] });
       form.reset();
+      setFormError(null);
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to save mood entry", variant: "destructive" });
+    onError: (error: any) => {
+      console.error('Failed to save mood entry:', error);
+      setFormError(error.message || "Failed to save mood entry");
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to save mood entry", 
+        variant: "destructive" 
+      });
     },
   });
 
   const updateMoodEntry = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<InsertMoodEntry> }) =>
-      apiRequest('PUT', `/api/mood-entries/${id}`, data),
+      api.put(`/api/mood-entries/${id}`, data),
     onSuccess: () => {
       toast({ title: "Success", description: "Mood entry updated successfully!" });
       queryClient.invalidateQueries({ queryKey: ['/api/mood-entries'] });
+      setFormError(null);
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to update mood entry", variant: "destructive" });
+    onError: (error: any) => {
+      console.error('Failed to update mood entry:', error);
+      setFormError(error.message || "Failed to update mood entry");
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to update mood entry", 
+        variant: "destructive" 
+      });
     },
   });
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
-    createMoodEntry.mutate({ ...data, userId: 1, timeOfDay: entryType });
+    try {
+      setFormError(null);
+      createMoodEntry.mutate({ ...data, userId: 1, timeOfDay: entryType });
+    } catch (error: any) {
+      setFormError(error.message || "Failed to submit form");
+    }
   };
 
   const getMoodEmoji = (mood: string) => {
