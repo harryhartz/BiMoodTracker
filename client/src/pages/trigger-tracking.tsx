@@ -114,7 +114,7 @@ export default function TriggerTracking() {
                 )}
               />
 
-              {/* Emotion Wheel */}
+              {/* Emotion Selection */}
               <FormField
                 control={form.control}
                 name="emotion"
@@ -122,10 +122,56 @@ export default function TriggerTracking() {
                   <FormItem>
                     <FormLabel className="text-slate-300">Primary Emotion</FormLabel>
                     <FormControl>
-                      <EmotionWheel
-                        selectedEmotion={field.value}
-                        onEmotionSelect={field.onChange}
-                      />
+                      <div>
+                        {!showCustomEmotion ? (
+                          <div>
+                            <EmotionWheel
+                              selectedEmotion={field.value}
+                              onEmotionSelect={(emotion) => {
+                                field.onChange(emotion);
+                                setCustomEmotion('');
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowCustomEmotion(true)}
+                              className="mt-4 border-slate-600 text-slate-300 hover:bg-slate-700"
+                            >
+                              <Plus className="mr-2" size={16} />
+                              Add Custom Emotion
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <Input
+                              placeholder="Enter your custom emotion (e.g., 'deeply frustrated', 'cautiously hopeful')"
+                              value={customEmotion}
+                              onChange={(e) => {
+                                setCustomEmotion(e.target.value);
+                                field.onChange(e.target.value);
+                              }}
+                              className="bg-slate-700 border-slate-600 text-white"
+                            />
+                            <div className="flex space-x-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setShowCustomEmotion(false);
+                                  setCustomEmotion('');
+                                  field.onChange('');
+                                }}
+                                className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                              >
+                                Back to Wheel
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </FormControl>
                   </FormItem>
                 )}
