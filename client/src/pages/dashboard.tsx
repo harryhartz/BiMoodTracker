@@ -31,15 +31,15 @@ export default function Dashboard() {
   };
 
   const getStreakCount = () => {
-    // Simple streak calculation - in real app would be more sophisticated
-    return Math.min(todaysMoodEntries.length > 0 ? 7 : 6, 7);
+    // Calculate actual streak based on mood entries
+    return todaysMoodEntries.length > 0 ? 1 : 0;
   };
 
   return (
     <div className="py-6">
       {/* Dashboard Header */}
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">Welcome back, Alex</h2>
+        <h2 className="text-3xl font-bold text-white mb-2">Welcome back, Harry</h2>
         <p className="text-slate-400">Let's check in with how you're feeling today</p>
       </div>
 

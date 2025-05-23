@@ -31,7 +31,7 @@ export default function Auth() {
   const signupForm = useForm<z.infer<typeof insertUserSchema>>({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
-      username: "",
+      name: "",
       email: "",
       password: "",
     },
@@ -125,13 +125,13 @@ export default function Auth() {
             {isSignUp ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-slate-300 text-sm font-medium mb-2">Username</label>
+                  <label className="block text-slate-300 text-sm font-medium mb-2">Name</label>
                   <input
                     type="text"
-                    placeholder="Enter your username"
+                    placeholder="Enter your name"
                     className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder:text-slate-400 rounded-md focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    value={signupForm.watch("username") || ""}
-                    onChange={(e) => signupForm.setValue("username", e.target.value)}
+                    value={signupForm.watch("name") || ""}
+                    onChange={(e) => signupForm.setValue("name", e.target.value)}
                   />
                 </div>
                 
@@ -161,7 +161,7 @@ export default function Auth() {
                   type="button"
                   onClick={() => {
                     const formData = {
-                      username: signupForm.getValues("username"),
+                      name: signupForm.getValues("name"),
                       email: signupForm.getValues("email"),
                       password: signupForm.getValues("password")
                     };
