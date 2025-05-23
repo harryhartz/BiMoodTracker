@@ -28,6 +28,7 @@ export default function RatingScale({
         {Array.from({ length: max }, (_, i) => i + 1).map((rating) => (
           <button
             key={rating}
+            type="button"
             onClick={() => onChange(rating)}
             className={`w-12 h-12 rounded-xl transition-colors flex items-center justify-center text-white font-semibold ${
               value === rating
