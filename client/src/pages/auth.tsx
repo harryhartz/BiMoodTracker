@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -10,10 +10,23 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertUserSchema, loginSchema } from "@shared/schema";
 import { z } from "zod";
+import { useLocation } from "wouter";
 
 export default function Auth() {
+  const [location] = useLocation();
   const [isSignUp, setIsSignUp] = useState(false);
   const { toast } = useToast();
+  
+  // Check URL parameters to determine if we should show signup or signin
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+    if (mode === 'signup') {
+      setIsSignUp(true);
+    } else if (mode === 'signin') {
+      setIsSignUp(false);
+    }
+  }, [location]);
 
   const signupForm = useForm<z.infer<typeof insertUserSchema>>({
     resolver: zodResolver(insertUserSchema),
@@ -60,8 +73,8 @@ export default function Auth() {
         title: "Welcome back!", 
         description: "Successfully signed in to your account." 
       });
-      // Redirect to dashboard - for now we'll just reload
-      window.location.reload();
+      // Redirect to dashboard
+      window.location.href = "/dashboard";
     },
     onError: (error: any) => {
       toast({ 
@@ -81,14 +94,14 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-white mb-2">Mood Tracker</h1>
-          <p className="text-gray-400">Your personal mental health companion</p>
+          <p className="text-slate-400">Your personal mental health companion</p>
         </div>
 
-        <Card className="bg-gray-800 border-gray-700">
+        <Card className="bg-slate-800/90 border-slate-700 backdrop-blur-sm">
           <CardContent className="p-6">
             <div className="flex space-x-1 mb-6">
               <Button
@@ -117,12 +130,13 @@ export default function Auth() {
                     name="username"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-300">Username</FormLabel>
+                        <FormLabel className="text-slate-300">Username</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Enter your username"
-                            className="bg-gray-700 border-gray-600 text-white"
                             {...field}
+                            placeholder="Enter your username"
+                            className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500"
+                            autoComplete="username"
                           />
                         </FormControl>
                         <FormMessage />
@@ -135,13 +149,14 @@ export default function Auth() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-300">Email</FormLabel>
+                        <FormLabel className="text-slate-300">Email</FormLabel>
                         <FormControl>
                           <Input
+                            {...field}
                             type="email"
                             placeholder="Enter your email"
-                            className="bg-gray-700 border-gray-600 text-white"
-                            {...field}
+                            className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500"
+                            autoComplete="email"
                           />
                         </FormControl>
                         <FormMessage />
@@ -154,13 +169,14 @@ export default function Auth() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-300">Password</FormLabel>
+                        <FormLabel className="text-slate-300">Password</FormLabel>
                         <FormControl>
                           <Input
+                            {...field}
                             type="password"
                             placeholder="Enter your password"
-                            className="bg-gray-700 border-gray-600 text-white"
-                            {...field}
+                            className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500"
+                            autoComplete="new-password"
                           />
                         </FormControl>
                         <FormMessage />
@@ -170,7 +186,7 @@ export default function Auth() {
 
                   <Button 
                     type="submit" 
-                    className="w-full"
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                     disabled={signupMutation.isPending}
                   >
                     {signupMutation.isPending ? "Creating Account..." : "Create Account"}
@@ -185,13 +201,14 @@ export default function Auth() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-300">Email</FormLabel>
+                        <FormLabel className="text-slate-300">Email</FormLabel>
                         <FormControl>
                           <Input
+                            {...field}
                             type="email"
                             placeholder="Enter your email"
-                            className="bg-gray-700 border-gray-600 text-white"
-                            {...field}
+                            className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500"
+                            autoComplete="email"
                           />
                         </FormControl>
                         <FormMessage />
@@ -204,13 +221,14 @@ export default function Auth() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-300">Password</FormLabel>
+                        <FormLabel className="text-slate-300">Password</FormLabel>
                         <FormControl>
                           <Input
+                            {...field}
                             type="password"
                             placeholder="Enter your password"
-                            className="bg-gray-700 border-gray-600 text-white"
-                            {...field}
+                            className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500"
+                            autoComplete="current-password"
                           />
                         </FormControl>
                         <FormMessage />
@@ -220,7 +238,7 @@ export default function Auth() {
 
                   <Button 
                     type="submit" 
-                    className="w-full"
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
                     disabled={loginMutation.isPending}
                   >
                     {loginMutation.isPending ? "Signing In..." : "Sign In"}
@@ -230,10 +248,6 @@ export default function Auth() {
             )}
           </CardContent>
         </Card>
-
-        <div className="text-center text-sm text-gray-400">
-          <p>Track your mood patterns and mental health progress</p>
-        </div>
       </div>
     </div>
   );
