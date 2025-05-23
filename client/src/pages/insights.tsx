@@ -94,6 +94,27 @@ export default function Insights() {
     }))
     .sort((a, b) => a.sleep! - b.sleep!);
 
+  // Weight trend data
+  const weightTrendData = filteredMoodEntries
+    .filter(entry => entry.weight !== null && entry.weight > 0)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .map(entry => ({
+      weight: entry.weight,
+      date: entry.date,
+      displayDate: new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      weightUnit: entry.weightUnit || 'kg'
+    }));
+
+  // Calculate weight change
+  const getWeightChange = () => {
+    if (weightTrendData.length < 2) return { change: 0, percentage: 0 };
+    const latest = weightTrendData[weightTrendData.length - 1];
+    const earliest = weightTrendData[0];
+    const change = latest.weight! - earliest.weight!;
+    const percentage = ((change / earliest.weight!) * 100);
+    return { change: Math.round(change * 10) / 10, percentage: Math.round(percentage * 10) / 10 };
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -206,6 +227,52 @@ export default function Insights() {
                 </div>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Weight Trend Chart */}
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="p-6">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-purple-400" />
+              Weight Trend
+            </h2>
+            <div className="h-64">
+              {weightTrendData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={weightTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="displayDate" stroke="#9CA3AF" />
+                    <YAxis stroke="#9CA3AF" />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151' }}
+                      labelStyle={{ color: '#E5E7EB' }}
+                      formatter={(value, name) => [`${value} ${weightTrendData[0]?.weightUnit}`, 'Weight']}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="weight" 
+                      stroke="#A855F7" 
+                      strokeWidth={2}
+                      name="Weight"
+                      dot={{ fill: '#A855F7', strokeWidth: 2, r: 4 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-gray-400">No weight data available</p>
+                </div>
+              )}
+            </div>
+            {weightTrendData.length > 1 && (
+              <div className="mt-4 text-center">
+                <div className="text-sm text-gray-400">
+                  Change: {getWeightChange().change > 0 ? '+' : ''}{getWeightChange().change} {weightTrendData[0]?.weightUnit} 
+                  ({getWeightChange().percentage > 0 ? '+' : ''}{getWeightChange().percentage}%)
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
