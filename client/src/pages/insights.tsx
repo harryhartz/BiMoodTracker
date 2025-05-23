@@ -7,6 +7,7 @@ import { TrendingUp, TrendingDown, ArrowDown, Download, FileText, BarChart3, Cal
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import html2canvas from 'html2canvas';
 import type { MoodEntry, TriggerEvent } from "@shared/schema";
 
 export default function Insights() {
@@ -285,8 +286,31 @@ export default function Insights() {
     link.click();
   };
 
+  // Export chart as PNG
+  const exportChartAsPNG = async (chartId: string, filename: string) => {
+    const chartElement = document.getElementById(chartId);
+    if (!chartElement) return;
+
+    try {
+      const canvas = await html2canvas(chartElement, {
+        backgroundColor: '#1F2937', // Gray-800 background
+        scale: 2, // Higher resolution
+        logging: false,
+        useCORS: true
+      });
+      
+      const link = document.createElement('a');
+      link.download = `${filename}_${new Date().toISOString().split('T')[0]}.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+    } catch (error) {
+      console.error('Error exporting chart:', error);
+      alert('Failed to export chart. Please try again.');
+    }
+  };
+
   // Export dropdown component
-  const ExportDropdown = ({ onPDF, onCSV, onJPG }: { onPDF?: () => void, onCSV?: () => void, onJPG?: () => void }) => (
+  const ExportDropdown = ({ onPDF, onCSV, onPNG }: { onPDF?: () => void, onCSV?: () => void, onPNG?: () => void }) => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -296,7 +320,7 @@ export default function Insights() {
       <DropdownMenuContent align="end">
         {onPDF && <DropdownMenuItem onClick={onPDF}>Export as PDF</DropdownMenuItem>}
         {onCSV && <DropdownMenuItem onClick={onCSV}>Export as CSV</DropdownMenuItem>}
-        {onJPG && <DropdownMenuItem onClick={onJPG}>Export as JPG</DropdownMenuItem>}
+        {onPNG && <DropdownMenuItem onClick={onPNG}>Export as PNG</DropdownMenuItem>}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -347,12 +371,11 @@ export default function Insights() {
               Mood Trends
             </CardTitle>
             <ExportDropdown 
-              onPDF={exportMoodTrendToPDF}
-              onCSV={() => exportToCSV(moodTrendData, 'mood_trends')}
+              onPNG={() => exportChartAsPNG('mood-trends-chart', 'mood_trends')}
             />
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div id="mood-trends-chart" className="h-64">
               {moodTrendData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={moodTrendData}>
@@ -436,12 +459,11 @@ export default function Insights() {
               Weight Trend
             </CardTitle>
             <ExportDropdown 
-              onPDF={exportWeightTrendToPDF}
-              onCSV={() => exportToCSV(weightTrendData, 'weight_trends')}
+              onPNG={() => exportChartAsPNG('weight-trend-chart', 'weight_trends')}
             />
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div id="weight-trend-chart" className="h-64">
               {weightTrendData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={weightTrendData}>
@@ -488,11 +510,11 @@ export default function Insights() {
               Sleep vs Mood Correlation
             </CardTitle>
             <ExportDropdown 
-              onCSV={() => exportToCSV(sleepMoodData, 'sleep_mood_correlation')}
+              onPNG={() => exportChartAsPNG('sleep-mood-chart', 'sleep_mood_correlation')}
             />
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div id="sleep-mood-chart" className="h-64">
               {sleepMoodData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={sleepMoodData}>
@@ -535,13 +557,8 @@ export default function Insights() {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Medication Compliance */}
           <Card className="bg-gray-800 border-gray-700">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Medication Compliance</CardTitle>
-              <ExportDropdown 
-                onCSV={() => exportToCSV([{metric: 'Medication Compliance', value: medicationCompliance(), period: timeRange}], 'medication_compliance')}
-              />
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-4">
+              <h3 className="font-medium text-gray-300 mb-2">Medication Compliance</h3>
               <div className="text-2xl font-bold text-green-400">{medicationCompliance()}%</div>
               <p className="text-xs text-gray-500">
                 {timeRange === '1month' ? 'This month' : timeRange === '3months' ? 'Past 3 months' : 'Past 6 months'}
@@ -551,13 +568,8 @@ export default function Insights() {
 
           {/* Average Sleep */}
           <Card className="bg-gray-800 border-gray-700">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Average Sleep</CardTitle>
-              <ExportDropdown 
-                onCSV={() => exportToCSV([{metric: 'Average Sleep', value: averageSleep(), period: timeRange}], 'average_sleep')}
-              />
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-4">
+              <h3 className="font-medium text-gray-300 mb-2">Average Sleep</h3>
               <div className="text-2xl font-bold text-blue-400">{averageSleep()}h</div>
               <p className="text-xs text-gray-500">
                 {timeRange === '1month' ? 'This month' : timeRange === '3months' ? 'Past 3 months' : 'Past 6 months'}
@@ -567,13 +579,8 @@ export default function Insights() {
 
           {/* Mood Entries */}
           <Card className="bg-gray-800 border-gray-700">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Mood Entries</CardTitle>
-              <ExportDropdown 
-                onCSV={() => exportToCSV([{metric: 'Mood Entries', value: filteredMoodEntries.length, period: timeRange}], 'mood_entries_count')}
-              />
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-4">
+              <h3 className="font-medium text-gray-300 mb-2">Mood Entries</h3>
               <div className="text-2xl font-bold text-yellow-400">{filteredMoodEntries.length}</div>
               <p className="text-xs text-gray-500">Total entries</p>
             </CardContent>
@@ -581,13 +588,8 @@ export default function Insights() {
 
           {/* Trigger Events */}
           <Card className="bg-gray-800 border-gray-700">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Trigger Events</CardTitle>
-              <ExportDropdown 
-                onCSV={() => exportToCSV([{metric: 'Trigger Events', value: filteredTriggerEvents.length, period: timeRange}], 'trigger_events_count')}
-              />
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-4">
+              <h3 className="font-medium text-gray-300 mb-2">Trigger Events</h3>
               <div className="text-2xl font-bold text-purple-400">{filteredTriggerEvents.length}</div>
               <p className="text-xs text-gray-500">
                 {timeRange === '1month' ? 'This month' : timeRange === '3months' ? 'Past 3 months' : 'Past 6 months'}
