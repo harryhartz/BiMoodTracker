@@ -2,7 +2,7 @@ import { useAppNavigation } from "@/hooks/use-app-navigation";
 import { Home, Smile, AlertTriangle, Lightbulb, BarChart3 } from "lucide-react";
 
 const navItems = [
-  { href: "/", label: "Home", icon: Home },
+  { href: "/dashboard", label: "Home", icon: Home },
   { href: "/mood", label: "Mood", icon: Smile },
   { href: "/triggers", label: "Triggers", icon: AlertTriangle },
   { href: "/thoughts", label: "Thoughts", icon: Lightbulb },
