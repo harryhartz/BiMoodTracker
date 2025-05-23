@@ -10,6 +10,7 @@ import MoodTracking from "@/pages/mood-tracking";
 import TriggerTracking from "@/pages/trigger-tracking";
 import Thoughts from "@/pages/thoughts";
 import Insights from "@/pages/insights";
+import Auth from "@/pages/auth";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/triggers" component={TriggerTracking} />
       <Route path="/thoughts" component={Thoughts} />
       <Route path="/insights" component={Insights} />
+      <Route path="/auth" component={Auth} />
       <Route component={NotFound} />
     </Switch>
   );
