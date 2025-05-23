@@ -8,6 +8,7 @@ import {
   insertUserSchema, loginSchema
 } from "@shared/schema";
 import { z } from "zod";
+import { authMiddleware, generateToken } from "./middleware/auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -32,9 +33,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword,
       });
 
-      res.json({ id: user.id, username: user.username, email: user.email });
+      // Generate JWT token
+      const token = generateToken(user.id);
+
+      res.json({ 
+        id: user.id, 
+        username: user.username, 
+        email: user.email,
+        token
+      });
     } catch (error: any) {
-      res.status(400).json({ message: error.message || "Failed to create account" });
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors.map(e => ({ 
+            path: e.path.join('.'), 
+            message: e.message 
+          }))
+        });
+      } else {
+        res.status(400).json({ message: error.message || "Failed to create account" });
+      }
     }
   });
 
@@ -54,18 +73,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
-      res.json({ id: user.id, username: user.username, email: user.email });
+      // Generate JWT token
+      const token = generateToken(user.id);
+
+      res.json({ 
+        id: user.id, 
+        username: user.username, 
+        email: user.email,
+        token
+      });
     } catch (error: any) {
-      res.status(400).json({ message: error.message || "Failed to sign in" });
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors.map(e => ({ 
+            path: e.path.join('.'), 
+            message: e.message 
+          }))
+        });
+      } else {
+        res.status(400).json({ message: error.message || "Failed to sign in" });
+      }
     }
   });
+
+  // Apply authMiddleware to all protected routes
+  app.use("/api/mood-entries", authMiddleware);
+  app.use("/api/trigger-events", authMiddleware);
+  app.use("/api/thoughts", authMiddleware);
+  app.use("/api/medications", authMiddleware);
 
   // Mood entries routes - now properly secured by user
   app.get("/api/mood-entries", async (req, res) => {
     try {
-      // For now, we'll use user ID 1 as logged in user
-      // In a real app, this would come from session/token
-      const userId = 1; // TODO: Get from authenticated session
+      const userId = req.userId!;
       const { date, startDate, endDate } = req.query;
       
       let entries;
@@ -81,7 +122,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(entries);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch mood entries" });
+      console.error("Error fetching mood entries:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch mood entries",
+        error: process.env.NODE_ENV === 'development' ? String(error) : undefined
+      });
     }
   });
 
@@ -89,16 +134,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertMoodEntrySchema.parse({
         ...req.body,
-        userId: DEMO_USER_ID
+        userId: req.userId
       });
       
       const entry = await storage.createMoodEntry(validatedData);
       res.json(entry);
     } catch (error) {
+      console.error("Error creating mood entry:", error);
       if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid data", errors: error.errors });
+        res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors.map(e => ({ 
+            path: e.path.join('.'), 
+            message: e.message 
+          }))
+        });
       } else {
-        res.status(500).json({ message: "Failed to create mood entry" });
+        res.status(500).json({ 
+          message: "Failed to create mood entry",
+          error: process.env.NODE_ENV === 'development' ? String(error) : undefined
+        });
       }
     }
   });
