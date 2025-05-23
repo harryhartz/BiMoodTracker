@@ -31,7 +31,7 @@ export default function MoodTracking() {
       date: getCurrentDate(),
       timeOfDay: 'morning',
       mood: '',
-      overallMoodIntensity: 5,
+      overallMoodIntensity: 0,
       hoursSlept: undefined,
       sleepQuality: 3,
       weight: undefined,
@@ -149,10 +149,11 @@ export default function MoodTracking() {
                   <FormItem>
                     <FormControl>
                       <RatingScale
-                        label="Overall Mood Intensity (1-10)"
+                        label="Overall Mood Intensity (-3 to +3)"
                         value={field.value}
                         onChange={field.onChange}
-                        max={10}
+                        min={-3}
+                        max={3}
                         color="primary"
                       />
                     </FormControl>
@@ -422,7 +423,7 @@ export default function MoodTracking() {
                   </div>
                   <div className="flex items-center space-x-4">
                     <div className="text-center">
-                      <div className="text-sm font-semibold text-white">{entry.overallMoodIntensity}/10</div>
+                      <div className="text-sm font-semibold text-white">{entry.overallMoodIntensity > 0 ? `+${entry.overallMoodIntensity}` : entry.overallMoodIntensity}</div>
                       <div className="text-xs text-slate-400">Intensity</div>
                     </div>
                     <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">

@@ -391,7 +391,7 @@ export default function Insights() {
                       tick={{ fill: '#9CA3AF' }}
                     />
                     <YAxis 
-                      domain={[1, 10]}
+                      domain={[-3, 3]}
                       stroke="#9CA3AF"
                       tick={{ fill: '#9CA3AF' }}
                     />

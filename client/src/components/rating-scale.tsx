@@ -2,6 +2,7 @@ interface RatingScaleProps {
   value?: number;
   onChange: (value: number) => void;
   max?: number;
+  min?: number;
   label?: string;
   color?: "primary" | "accent" | "secondary";
 }
@@ -10,6 +11,7 @@ export default function RatingScale({
   value, 
   onChange, 
   max = 5, 
+  min = 1,
   label,
   color = "primary"
 }: RatingScaleProps) {
@@ -19,13 +21,25 @@ export default function RatingScale({
     secondary: "bg-purple-600"
   };
 
+  const getRatingValues = () => {
+    if (min < 0) {
+      // For negative ranges like -3 to +3
+      return Array.from({ length: max - min + 1 }, (_, i) => min + i);
+    } else {
+      // For positive ranges like 1 to 5
+      return Array.from({ length: max }, (_, i) => i + min);
+    }
+  };
+
+  const ratingValues = getRatingValues();
+
   return (
     <div>
       {label && (
         <label className="block text-sm font-medium text-slate-300 mb-2">{label}</label>
       )}
       <div className="flex space-x-2">
-        {Array.from({ length: max }, (_, i) => i + 1).map((rating) => (
+        {ratingValues.map((rating) => (
           <button
             key={rating}
             type="button"
@@ -36,7 +50,7 @@ export default function RatingScale({
                 : "bg-slate-700 hover:" + colorClasses[color]
             }`}
           >
-            {rating}
+            {rating > 0 ? `+${rating}` : rating}
           </button>
         ))}
       </div>
