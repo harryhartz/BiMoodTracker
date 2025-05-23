@@ -10,6 +10,9 @@ import {
 import { z } from "zod";
 import { authMiddleware, generateToken } from "./middleware/auth";
 
+// For development only - will be removed in production
+const DEMO_USER_ID = 1;
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
