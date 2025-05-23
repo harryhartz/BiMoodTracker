@@ -1,0 +1,99 @@
+🌤️ DAILY MOOD TRACKING FLOW
+1. Morning Entry
+Time-bound reminder popup (optional)
+
+Fields:
+
+Mood (Choose from mood word list e.g., Calm, Anxious, Sad, Happy)
+
+Rate it (1 to 5 scale, emoji-based)
+
+Sleep quality (1 to 5 or poor/good scale)
+
+Medication taken? (Yes/No toggle)
+
+Weight (Numeric input + kg/lb option)
+
+✅ Submit → Toast notification: “Morning mood saved.”
+
+2. Evening Entry
+Same as Morning, plus:
+
+Reflective comment (optional)
+
+Overall day summary (1 word or scale)
+
+Energy level (1-5)
+
+Cravings/Impulses (yes/no + dropdown tags)
+
+3. Medication Section
+Add/Edit medication types
+
+Schedule & dosage logging
+
+Checkbox toggle for daily compliance
+
+4. Daily Weight Entry
+Morning-only entry encouraged
+
+Auto-chart with trend line
+
+Alert if drastic change (+/- 2kg in 2 days)
+
+🚨 TRIGGER EVENT TRACKING FLOW
+1. Log New Trigger (Quick Form)
+Fields:
+
+Event/Situation (text or emoji tag)
+
+Emotion (choose from wheel: fear, anger, joy, shame, etc.)
+
+Action taken (text or tag list e.g. shouted, cried, walked out)
+
+Consequence (free text or choose from list e.g., felt better, fight escalated)
+
+→ Submit → Prompt: “Do you want to reflect later?” → [Yes, Remind Me Tonight]
+
+2. View Trigger History
+Filter by emotion or tag
+
+Timeline view or tile view
+
+Edit/Delete entries
+
+📊 INSIGHTS & CHARTS
+1. Mood Charts
+Mood over time (Morning vs Evening split)
+
+Week/Month filters
+
+Pie of mood-word usage
+
+2. Trigger Heatmaps
+What events triggered strongest responses
+
+Emotion frequency over days
+
+Trigger → Action → Outcome Sankey flow
+
+3. Medication / Weight Trends
+Mood vs Medication compliance
+
+Weight vs Mood correlation
+
+Anomalies flagged (e.g., missed meds & bad mood spike)
+
+🧠 UX/UI Notes
+Emotion Wheel or emoji picker to make mood entry fast
+
+One-click logging (with last used values remembered)
+
+Minimal typing where possible
+
+Dark mode default (helpful for mood disorders)
+
+Use subtle animations to keep user engaged without distraction
+
+Daily check-in streak and weekly summary to encourage consistency
+
