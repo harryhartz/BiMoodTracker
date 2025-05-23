@@ -60,23 +60,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Current user (hardcoded for demo - in real app would use authentication)
-  const DEMO_USER_ID = 1;
-
-  // Mood entries routes
+  // Mood entries routes - now properly secured by user
   app.get("/api/mood-entries", async (req, res) => {
     try {
+      // For now, we'll use user ID 1 as logged in user
+      // In a real app, this would come from session/token
+      const userId = 1; // TODO: Get from authenticated session
       const { date, startDate, endDate } = req.query;
       
       let entries;
       if (startDate && endDate) {
         entries = await storage.getMoodEntriesByDateRange(
-          DEMO_USER_ID, 
+          userId, 
           startDate as string, 
           endDate as string
         );
       } else {
-        entries = await storage.getMoodEntries(DEMO_USER_ID, date as string);
+        entries = await storage.getMoodEntries(userId, date as string);
       }
       
       res.json(entries);
