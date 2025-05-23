@@ -1,14 +1,64 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import bcrypt from "bcryptjs";
 import { storage } from "./storage";
 import { 
   insertMoodEntrySchema, insertTriggerEventSchema, 
-  insertThoughtSchema, insertMedicationSchema 
+  insertThoughtSchema, insertMedicationSchema,
+  insertUserSchema, loginSchema
 } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
+
+  // Authentication routes
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+      const data = insertUserSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(data.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists with this email" });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(data.password, 10);
+      
+      // Create user
+      const user = await storage.createUser({
+        ...data,
+        password: hashedPassword,
+      });
+
+      res.json({ id: user.id, username: user.username, email: user.email });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Failed to create account" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const data = loginSchema.parse(req.body);
+      
+      // Find user by email
+      const user = await storage.getUserByEmail(data.email);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      // Verify password
+      const isValidPassword = await bcrypt.compare(data.password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      res.json({ id: user.id, username: user.username, email: user.email });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || "Failed to sign in" });
+    }
+  });
 
   // Current user (hardcoded for demo - in real app would use authentication)
   const DEMO_USER_ID = 1;
