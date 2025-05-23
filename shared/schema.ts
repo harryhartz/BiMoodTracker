@@ -83,7 +83,7 @@ export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({
   date: z.string(),
   timeOfDay: z.enum(['morning', 'evening']),
   mood: z.string().min(1),
-  intensity: z.number().min(1).max(5),
+  overallMoodIntensity: z.number().min(-3).max(3),
   hoursSlept: z.number().positive().optional(),
   sleepQuality: z.number().min(1).max(5).optional(),
   weight: z.number().positive().optional(),
