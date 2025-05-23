@@ -51,22 +51,22 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       setIsLoading(true);
       setError(null);
       
-      const response = await apiRequest<AuthResponse>('POST', '/api/auth/login', { email, password });
+      const data = await apiRequest<AuthResponse>('POST', '/api/auth/login', { email, password });
       
       // Save to state
       setUser({
-        id: response.id,
-        name: response.name,
-        email: response.email
+        id: data.id,
+        name: data.name,
+        email: data.email
       });
-      setToken(response.token);
+      setToken(data.token);
       
       // Save to localStorage
-      localStorage.setItem('auth_token', response.token);
+      localStorage.setItem('auth_token', data.token);
       localStorage.setItem('auth_user', JSON.stringify({
-        id: response.id,
-        name: response.name,
-        email: response.email
+        id: data.id,
+        name: data.name,
+        email: data.email
       }));
       
     } catch (err: any) {
@@ -82,7 +82,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       setIsLoading(true);
       setError(null);
       
-      const response = await apiRequest<AuthResponse>('POST', '/api/auth/signup', { 
+      const data = await apiRequest<AuthResponse>('POST', '/api/auth/signup', { 
         name, 
         email, 
         password 
@@ -90,18 +90,18 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
       
       // Save to state
       setUser({
-        id: response.id,
-        name: response.name,
-        email: response.email
+        id: data.id,
+        name: data.name,
+        email: data.email
       });
-      setToken(response.token);
+      setToken(data.token);
       
       // Save to localStorage
-      localStorage.setItem('auth_token', response.token);
+      localStorage.setItem('auth_token', data.token);
       localStorage.setItem('auth_user', JSON.stringify({
-        id: response.id,
-        name: response.name,
-        email: response.email
+        id: data.id,
+        name: data.name,
+        email: data.email
       }));
       
     } catch (err: any) {
