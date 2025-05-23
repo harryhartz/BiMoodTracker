@@ -10,6 +10,27 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import type { MoodEntry, TriggerEvent, Thought, Medication } from "@shared/schema";
 
+// Helper function to get emoji for mood
+const getMoodEmoji = (mood: string): string => {
+  const moodEmojis: Record<string, string> = {
+    happy: '😊',
+    sad: '😢',
+    anxious: '😰',
+    calm: '😌',
+    excited: '🤩',
+    angry: '😠',
+    tired: '😴',
+    stressed: '😤',
+    content: '😊',
+    frustrated: '😤',
+    peaceful: '☮️',
+    overwhelmed: '🤯',
+    hopeful: '🌟',
+    lonely: '😔',
+  };
+  return moodEmojis[mood.toLowerCase()] || '😐';
+};
+
 export default function Insights() {
   const weightChartRef = useRef<HTMLDivElement>(null);
   const moodChartRef = useRef<HTMLDivElement>(null);
@@ -69,23 +90,46 @@ export default function Insights() {
       }));
   }, [filteredMoodEntries]);
 
-  // Process mood data for morning and evening comparison
-  const moodComparisonData = useMemo(() => {
+  // Process overall mood intensity data for morning and evening comparison
+  const moodIntensityData = useMemo(() => {
     return filteredMoodEntries
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .reduce((acc, entry) => {
         const date = entry.date;
         const existingDay = acc.find(d => d.date === date);
         if (existingDay) {
-          if (entry.timeOfDay === 'morning') existingDay.morning = entry.intensity;
-          if (entry.timeOfDay === 'evening') existingDay.evening = entry.intensity;
+          if (entry.timeOfDay === 'morning') existingDay.morning = entry.overallMoodIntensity;
+          if (entry.timeOfDay === 'evening') existingDay.evening = entry.overallMoodIntensity;
         } else {
           const newDay: any = {
             date,
             displayDate: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
           };
-          if (entry.timeOfDay === 'morning') newDay.morning = entry.intensity;
-          if (entry.timeOfDay === 'evening') newDay.evening = entry.intensity;
+          if (entry.timeOfDay === 'morning') newDay.morning = entry.overallMoodIntensity;
+          if (entry.timeOfDay === 'evening') newDay.evening = entry.overallMoodIntensity;
+          acc.push(newDay);
+        }
+        return acc;
+      }, [] as any[]);
+  }, [filteredMoodEntries]);
+
+  // Process emoji mood data for the mood chart
+  const emojiMoodData = useMemo(() => {
+    return filteredMoodEntries
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .reduce((acc, entry) => {
+        const date = entry.date;
+        const existingDay = acc.find(d => d.date === date);
+        if (existingDay) {
+          if (entry.timeOfDay === 'morning') existingDay.morningMood = entry.mood;
+          if (entry.timeOfDay === 'evening') existingDay.eveningMood = entry.mood;
+        } else {
+          const newDay: any = {
+            date,
+            displayDate: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          };
+          if (entry.timeOfDay === 'morning') newDay.morningMood = entry.mood;
+          if (entry.timeOfDay === 'evening') newDay.eveningMood = entry.mood;
           acc.push(newDay);
         }
         return acc;
@@ -119,11 +163,11 @@ export default function Insights() {
 
   // Calculate insights
   const averageMood = filteredMoodEntries.length > 0 
-    ? (filteredMoodEntries.reduce((sum, entry) => sum + (entry.intensity || 5), 0) / filteredMoodEntries.length).toFixed(1)
+    ? (filteredMoodEntries.reduce((sum, entry) => sum + (entry.overallMoodIntensity || 5), 0) / filteredMoodEntries.length).toFixed(1)
     : '0';
 
-  const moodTrend = moodComparisonData.length >= 2 
-    ? moodComparisonData[moodComparisonData.length - 1].morning > moodComparisonData[0].morning ? 'improving' : 'declining'
+  const moodTrend = moodIntensityData.length >= 2 
+    ? moodIntensityData[moodIntensityData.length - 1].morning > moodIntensityData[0].morning ? 'improving' : 'declining'
     : 'stable';
 
   // Export functions
@@ -284,12 +328,51 @@ export default function Insights() {
           </Card>
         )}
 
-        {/* Morning vs Evening Mood Chart with Export */}
+        {/* Emoji Mood Chart */}
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Brain className="h-5 w-5" />
+              Daily Mood Types
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {emojiMoodData.length > 0 ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-2">
+                  {emojiMoodData.map((day, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                      <span className="text-sm text-gray-300">{day.displayDate}</span>
+                      <div className="flex gap-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-green-400">Morning:</span>
+                          <span className="text-lg">{getMoodEmoji(day.morningMood || '')}</span>
+                          <span className="text-xs text-gray-400 capitalize">{day.morningMood || 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-blue-400">Evening:</span>
+                          <span className="text-lg">{getMoodEmoji(day.eveningMood || '')}</span>
+                          <span className="text-xs text-gray-400 capitalize">{day.eveningMood || 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="h-40 flex items-center justify-center bg-gray-700 rounded-lg">
+                <p className="text-gray-400">No mood data available</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Overall Mood Intensity Line Chart */}
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-white flex items-center gap-2">
               <Brain className="h-5 w-5" />
-              Morning vs Evening Mood
+              Overall Mood Intensity (1-10)
             </CardTitle>
             <Button onClick={exportMoodChart} variant="outline" size="sm">
               <Camera className="h-4 w-4 mr-2" />
@@ -297,10 +380,10 @@ export default function Insights() {
             </Button>
           </CardHeader>
           <CardContent>
-            {moodComparisonData.length > 0 ? (
+            {moodIntensityData.length > 0 ? (
               <div ref={moodChartRef} className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={moodComparisonData}>
+                  <LineChart data={moodIntensityData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis 
                       dataKey="displayDate" 
@@ -326,7 +409,7 @@ export default function Insights() {
                       stroke="#10B981" 
                       strokeWidth={3}
                       dot={{ fill: '#10B981', strokeWidth: 2, r: 5 }}
-                      name="Morning Mood"
+                      name="Morning Intensity"
                     />
                     <Line 
                       type="monotone" 
@@ -334,14 +417,14 @@ export default function Insights() {
                       stroke="#3B82F6" 
                       strokeWidth={3}
                       dot={{ fill: '#3B82F6', strokeWidth: 2, r: 5 }}
-                      name="Evening Mood"
+                      name="Evening Intensity"
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             ) : (
               <div className="h-80 flex items-center justify-center bg-gray-700 rounded-lg">
-                <p className="text-gray-400">No mood comparison data available</p>
+                <p className="text-gray-400">No mood intensity data available</p>
               </div>
             )}
           </CardContent>

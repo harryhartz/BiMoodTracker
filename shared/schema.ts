@@ -16,7 +16,7 @@ export const moodEntries = pgTable("mood_entries", {
   date: text("date").notNull(), // YYYY-MM-DD format
   timeOfDay: text("time_of_day").notNull(), // 'morning' | 'evening'
   mood: text("mood").notNull(),
-  intensity: integer("intensity").notNull(), // 1-5
+  overallMoodIntensity: integer("overall_mood_intensity").notNull(), // 1-10
   hoursSlept: real("hours_slept"), // For morning entries
   sleepQuality: integer("sleep_quality"), // 1-5 for evening entries only
   weight: real("weight"),
