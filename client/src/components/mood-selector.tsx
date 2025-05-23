@@ -11,6 +11,7 @@ export default function MoodSelector({ selectedMood, onMoodSelect }: MoodSelecto
       {MOOD_OPTIONS.map((mood) => (
         <button
           key={mood.value}
+          type="button"
           onClick={() => onMoodSelect(mood.value)}
           className={`p-4 rounded-xl transition-all duration-200 text-center group hover:scale-105 ${
             selectedMood === mood.value

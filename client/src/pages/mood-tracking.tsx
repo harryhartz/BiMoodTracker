@@ -76,7 +76,7 @@ export default function MoodTracking() {
   });
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
-    createMoodEntry.mutate({ ...data, timeOfDay: entryType });
+    createMoodEntry.mutate({ ...data, userId: 1, timeOfDay: entryType });
   };
 
   const getMoodEmoji = (mood: string) => {
@@ -183,8 +183,8 @@ export default function MoodTracking() {
                   />
                 )}
                 
-                {/* Sleep Quality (Evening only) */}
-                {entryType === 'evening' && (
+                {/* Sleep Quality (Morning only) */}
+                {entryType === 'morning' && (
                   <FormField
                     control={form.control}
                     name="sleepQuality"
@@ -249,8 +249,8 @@ export default function MoodTracking() {
                   </div>
                 )}
 
-                {/* Energy Level (Evening only) */}
-                {entryType === 'evening' && (
+                {/* Energy Level (Morning only) */}
+                {entryType === 'morning' && (
                   <FormField
                     control={form.control}
                     name="energyLevel"
@@ -270,45 +270,49 @@ export default function MoodTracking() {
                 )}
               </div>
 
-              {/* Medication Toggles */}
+              {/* Medication Toggles - only show relevant one */}
               <div>
-                <FormLabel className="text-slate-300 mb-3 block">Medication Taken Today?</FormLabel>
-                <div className="space-y-4">
+                {entryType === 'morning' && (
                   <FormField
                     control={form.control}
                     name="morningMedication"
                     render={({ field }) => (
                       <FormItem>
+                        <FormLabel className="text-slate-300 mb-3 block">Morning Medication Taken?</FormLabel>
                         <FormControl>
                           <div className="flex items-center space-x-4">
                             <Switch
                               checked={field.value}
                               onCheckedChange={field.onChange}
                             />
-                            <span className="text-slate-300">Morning Medication</span>
+                            <span className="text-slate-300">Yes, I took my morning medication</span>
                           </div>
                         </FormControl>
                       </FormItem>
                     )}
                   />
+                )}
+                
+                {entryType === 'evening' && (
                   <FormField
                     control={form.control}
                     name="eveningMedication"
                     render={({ field }) => (
                       <FormItem>
+                        <FormLabel className="text-slate-300 mb-3 block">Evening Medication Taken?</FormLabel>
                         <FormControl>
                           <div className="flex items-center space-x-4">
                             <Switch
                               checked={field.value}
                               onCheckedChange={field.onChange}
                             />
-                            <span className="text-slate-300">Evening Medication</span>
+                            <span className="text-slate-300">Yes, I took my evening medication</span>
                           </div>
                         </FormControl>
                       </FormItem>
                     )}
                   />
-                </div>
+                )}
               </div>
 
               {/* Evening-specific fields */}
