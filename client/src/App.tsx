@@ -20,14 +20,13 @@ import NotFound from "@/pages/not-found";
 // Protected route component that ensures user is authenticated
 function ProtectedRoute({ component: Component }: { component: React.ComponentType<any> }) {
   const { isAuthenticated, isLoading } = useAuth();
-  const [, navigate] = useRouter();
   
   // Check authentication status and redirect if needed
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate('/auth');
+      window.location.href = '/auth';
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, isLoading]);
 
   if (isLoading) {
     return (
