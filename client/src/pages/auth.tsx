@@ -7,15 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { insertUserSchema, loginSchema } from "@shared/schema";
 import { z } from "zod";
 import { useLocation } from "wouter";
+import ErrorMessage from "@/components/ui/error-message";
 
 export default function Auth() {
   const [location] = useLocation();
   const [isSignUp, setIsSignUp] = useState(false);
   const { toast } = useToast();
+  const { login, signup, error: authError } = useAuth();
   
   // Check URL parameters to determine if we should show signup or signin
   useEffect(() => {
@@ -46,43 +49,41 @@ export default function Auth() {
   });
 
   const signupMutation = useMutation({
-    mutationFn: (data: z.infer<typeof insertUserSchema>) => 
-      apiRequest('POST', '/api/auth/signup', data),
-    onSuccess: () => {
-      toast({ 
-        title: "Account created!", 
-        description: "Welcome! You can now sign in to your account." 
-      });
-      setIsSignUp(false);
-      signupForm.reset();
-    },
-    onError: (error: any) => {
-      toast({ 
-        title: "Signup failed", 
-        description: error.message || "Please try again",
-        variant: "destructive" 
-      });
-    },
+    mutationFn: async (data: z.infer<typeof insertUserSchema>) => {
+      try {
+        await signup(data.name, data.email, data.password);
+        toast({ 
+          title: "Account created!", 
+          description: "Welcome! You are now signed in to your account." 
+        });
+        window.location.href = "/dashboard";
+      } catch (error: any) {
+        toast({ 
+          title: "Signup failed", 
+          description: error.message || "Please try again",
+          variant: "destructive" 
+        });
+      }
+    }
   });
 
   const loginMutation = useMutation({
-    mutationFn: (data: z.infer<typeof loginSchema>) => 
-      apiRequest('POST', '/api/auth/login', data),
-    onSuccess: () => {
-      toast({ 
-        title: "Welcome back!", 
-        description: "Successfully signed in to your account." 
-      });
-      // Redirect to dashboard
-      window.location.href = "/dashboard";
-    },
-    onError: (error: any) => {
-      toast({ 
-        title: "Login failed", 
-        description: error.message || "Invalid email or password",
-        variant: "destructive" 
-      });
-    },
+    mutationFn: async (data: z.infer<typeof loginSchema>) => {
+      try {
+        await login(data.email, data.password);
+        toast({ 
+          title: "Welcome back!", 
+          description: "Successfully signed in to your account." 
+        });
+        window.location.href = "/dashboard";
+      } catch (error: any) {
+        toast({ 
+          title: "Login failed", 
+          description: error.message || "Invalid email or password",
+          variant: "destructive" 
+        });
+      }
+    }
   });
 
   const onSignup = (data: z.infer<typeof insertUserSchema>) => {
