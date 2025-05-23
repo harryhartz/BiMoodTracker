@@ -377,43 +377,46 @@ export default function Insights() {
           <CardContent>
             <div id="mood-trends-chart" className="h-64">
               {moodTrendData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={moodTrendData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis 
-                      dataKey="displayDate" 
-                      stroke="#9CA3AF" 
-                      label={{ value: 'Date', position: 'insideBottom', offset: -5 }}
-                    />
-                    <YAxis 
-                      domain={[1, 5]} 
-                      stroke="#9CA3AF"
-                      label={{ value: 'Mood Intensity (1-5)', angle: -90, position: 'insideLeft' }}
-                    />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151' }}
-                      labelStyle={{ color: '#E5E7EB' }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="morning" 
-                      stroke="#3B82F6" 
-                      strokeWidth={2}
-                      name="Morning Mood"
-                      connectNulls={false}
-                      dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="evening" 
-                      stroke="#F59E0B" 
-                      strokeWidth={2}
-                      name="Evening Mood"
-                      connectNulls={false}
-                      dot={{ fill: '#F59E0B', strokeWidth: 2, r: 4 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div className="h-full">
+                  <h3 className="text-center text-white font-semibold mb-2">Mood Trends</h3>
+                  <ResponsiveContainer width="100%" height="calc(100% - 32px)">
+                    <LineChart data={moodTrendData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis 
+                        dataKey="displayDate" 
+                        stroke="#9CA3AF" 
+                        label={{ value: 'Date', position: 'insideBottom', offset: -5 }}
+                      />
+                      <YAxis 
+                        domain={[1, 5]} 
+                        stroke="#9CA3AF"
+                        label={{ value: 'Mood Intensity (1-5)', angle: -90, position: 'insideLeft' }}
+                      />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151' }}
+                        labelStyle={{ color: '#E5E7EB' }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="morning" 
+                        stroke="#3B82F6" 
+                        strokeWidth={2}
+                        name="Morning Mood"
+                        connectNulls={false}
+                        dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="evening" 
+                        stroke="#F59E0B" 
+                        strokeWidth={2}
+                        name="Evening Mood"
+                        connectNulls={false}
+                        dot={{ fill: '#F59E0B', strokeWidth: 2, r: 4 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               ) : (
                 <div className="h-full flex items-center justify-center">
                   <p className="text-gray-400">No mood data in this time period</p>
@@ -479,18 +482,20 @@ export default function Insights() {
           <CardContent>
             <div id="weight-trend-chart" className="h-64">
               {weightTrendData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={weightTrendData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis 
-                      dataKey="displayDate" 
-                      stroke="#9CA3AF"
-                      label={{ value: 'Date', position: 'insideBottom', offset: -5 }}
-                    />
-                    <YAxis 
-                      stroke="#9CA3AF"
-                      label={{ value: 'Weight (kg)', angle: -90, position: 'insideLeft' }}
-                    />
+                <div className="h-full">
+                  <h3 className="text-center text-white font-semibold mb-2">Weight Trend</h3>
+                  <ResponsiveContainer width="100%" height="calc(100% - 32px)">
+                    <LineChart data={weightTrendData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis 
+                        dataKey="displayDate" 
+                        stroke="#9CA3AF"
+                        label={{ value: 'Date', position: 'insideBottom', offset: -5 }}
+                      />
+                      <YAxis 
+                        stroke="#9CA3AF"
+                        label={{ value: 'Weight (kg)', angle: -90, position: 'insideLeft' }}
+                      />
                     <Tooltip 
                       contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151' }}
                       labelStyle={{ color: '#E5E7EB' }}
@@ -506,20 +511,13 @@ export default function Insights() {
                     />
                   </LineChart>
                 </ResponsiveContainer>
+                </div>
               ) : (
                 <div className="h-full flex items-center justify-center">
                   <p className="text-gray-400">No weight data available</p>
                 </div>
               )}
             </div>
-            {weightTrendData.length > 1 && (
-              <div className="mt-4 text-center">
-                <div className="text-sm text-gray-400">
-                  Change: {getWeightChange().change > 0 ? '+' : ''}{getWeightChange().change} {weightTrendData[0]?.weightUnit} 
-                  ({getWeightChange().percentage > 0 ? '+' : ''}{getWeightChange().percentage}%)
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
 
@@ -537,19 +535,21 @@ export default function Insights() {
           <CardContent>
             <div id="sleep-mood-chart" className="h-64">
               {sleepMoodData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={sleepMoodData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis 
-                      dataKey="sleep" 
-                      stroke="#9CA3AF" 
-                      label={{ value: 'Hours of Sleep', position: 'insideBottom', offset: -5 }}
-                    />
-                    <YAxis 
-                      domain={[1, 5]} 
-                      stroke="#9CA3AF"
-                      label={{ value: 'Mood Intensity', angle: -90, position: 'insideLeft' }}
-                    />
+                <div className="h-full">
+                  <h3 className="text-center text-white font-semibold mb-2">Sleep vs Mood Correlation</h3>
+                  <ResponsiveContainer width="100%" height="calc(100% - 32px)">
+                    <LineChart data={sleepMoodData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis 
+                        dataKey="sleep" 
+                        stroke="#9CA3AF" 
+                        label={{ value: 'Hours of Sleep', position: 'insideBottom', offset: -5 }}
+                      />
+                      <YAxis 
+                        domain={[1, 5]} 
+                        stroke="#9CA3AF"
+                        label={{ value: 'Mood Intensity', angle: -90, position: 'insideLeft' }}
+                      />
                     <Tooltip 
                       contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151' }}
                       labelStyle={{ color: '#E5E7EB' }}
