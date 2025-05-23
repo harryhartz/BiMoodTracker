@@ -123,76 +123,56 @@ export default function Auth() {
             </div>
 
             {isSignUp ? (
-              <Form {...signupForm}>
-                <form onSubmit={signupForm.handleSubmit(onSignup)} className="space-y-4">
-                  <FormField
-                    control={signupForm.control}
-                    name="username"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-slate-300">Username</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter your username"
-                            className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500"
-                            autoComplete="username"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-slate-300 text-sm font-medium mb-2">Username</label>
+                  <input
+                    type="text"
+                    placeholder="Enter your username"
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder:text-slate-400 rounded-md focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    value={signupForm.watch("username") || ""}
+                    onChange={(e) => signupForm.setValue("username", e.target.value)}
                   />
-
-                  <FormField
-                    control={signupForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-slate-300">Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="email"
-                            placeholder="Enter your email"
-                            className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500"
-                            autoComplete="email"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                </div>
+                
+                <div>
+                  <label className="block text-slate-300 text-sm font-medium mb-2">Email</label>
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder:text-slate-400 rounded-md focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    value={signupForm.watch("email") || ""}
+                    onChange={(e) => signupForm.setValue("email", e.target.value)}
                   />
-
-                  <FormField
-                    control={signupForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-slate-300">Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="password"
-                            placeholder="Enter your password"
-                            className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500"
-                            autoComplete="new-password"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                </div>
+                
+                <div>
+                  <label className="block text-slate-300 text-sm font-medium mb-2">Password</label>
+                  <input
+                    type="password"
+                    placeholder="Enter your password"
+                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder:text-slate-400 rounded-md focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    value={signupForm.watch("password") || ""}
+                    onChange={(e) => signupForm.setValue("password", e.target.value)}
                   />
-
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-                    disabled={signupMutation.isPending}
-                  >
-                    {signupMutation.isPending ? "Creating Account..." : "Create Account"}
-                  </Button>
-                </form>
-              </Form>
+                </div>
+                
+                <Button 
+                  type="button"
+                  onClick={() => {
+                    const formData = {
+                      username: signupForm.getValues("username"),
+                      email: signupForm.getValues("email"),
+                      password: signupForm.getValues("password")
+                    };
+                    onSignup(formData);
+                  }}
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                  disabled={signupMutation.isPending}
+                >
+                  {signupMutation.isPending ? "Creating Account..." : "Create Account"}
+                </Button>
+              </div>
             ) : (
               <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
