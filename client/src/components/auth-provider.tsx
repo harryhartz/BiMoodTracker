@@ -1,5 +1,5 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from "react";
-import { useLocation, useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -58,10 +58,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLocation('/auth');
       } else if (user && isAuthPage) {
         // Redirect to dashboard if already logged in and on auth page
-        navigate('/dashboard');
+        setLocation('/dashboard');
       }
     }
-  }, [user, isLoading, location, navigate, toast]);
+  }, [user, isLoading, location, setLocation, toast]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userData = await api.post<User>('/api/auth/login', { email, password });
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      navigate('/dashboard');
+      setLocation('/dashboard');
       toast({
         title: "Welcome back!",
         description: `Logged in as ${userData.name}`,
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userData = await api.post<User>('/api/auth/signup', { name, email, password });
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      navigate('/dashboard');
+      setLocation('/dashboard');
       toast({
         title: "Account created!",
         description: "Welcome to BiMoodTracker"
@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
-    navigate('/');
+    setLocation('/');
     toast({
       title: "Logged out",
       description: "You have been successfully logged out"

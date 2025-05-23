@@ -11,87 +11,15 @@ import { apiRequest } from "@/lib/queryClient";
 import { insertUserSchema, loginSchema } from "@shared/schema";
 import { z } from "zod";
 import { useLocation } from "wouter";
+import { useIsMobile } from "@/hooks/use-mobile";
+import FormError from "@/components/form-error";
 
 export default function Auth() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [isSignUp, setIsSignUp] = useState(false);
   const { toast } = useToast();
-  
-  // Check URL parameters to determine if we should show signup or signin
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const mode = urlParams.get('mode');
-    if (mode === 'signup') {
-      setIsSignUp(true);
-    } else if (mode === 'signin') {
-      setIsSignUp(false);
-    }
-  }, [location]);
-
-  const signupForm = useForm<z.infer<typeof insertUserSchema>>({
-    resolver: zodResolver(insertUserSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-    },
-  });
-
-  const loginForm = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  const signupMutation = useMutation({
-    mutationFn: (data: z.infer<typeof insertUserSchema>) => 
-      apiRequest('POST', '/api/auth/signup', data),
-    onSuccess: () => {
-      toast({ 
-        title: "Account created!", 
-        description: "Welcome! You can now sign in to your account." 
-      });
-      setIsSignUp(false);
-      signupForm.reset();
-    },
-    onError: (error: any) => {
-      toast({ 
-        title: "Signup failed", 
-        description: error.message || "Please try again",
-        variant: "destructive" 
-      });
-    },
-  });
-
-  const loginMutation = useMutation({
-    mutationFn: (data: z.infer<typeof loginSchema>) => 
-      apiRequest('POST', '/api/auth/login', data),
-    onSuccess: () => {
-      toast({ 
-        title: "Welcome back!", 
-        description: "Successfully signed in to your account." 
-      });
-      // Redirect to dashboard
-      window.location.href = "/dashboard";
-    },
-    onError: (error: any) => {
-      toast({ 
-        title: "Login failed", 
-        description: error.message || "Invalid email or password",
-        variant: "destructive" 
-      });
-    },
-  });
-
-  const onSignup = (data: z.infer<typeof insertUserSchema>) => {
-    signupMutation.mutate(data);
-  };
-
-  const onLogin = (data: z.infer<typeof loginSchema>) => {
-    loginMutation.mutate(data);
-  };
+  const isMobile = useIsMobile();
+  const [formError, setFormError] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
