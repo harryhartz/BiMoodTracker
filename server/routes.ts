@@ -38,7 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ 
         id: user.id, 
-        username: user.username, 
+        name: user.name, 
         email: user.email,
         token
       });
@@ -78,7 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ 
         id: user.id, 
-        username: user.username, 
+        name: user.name, 
         email: user.email,
         token
       });
@@ -172,7 +172,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(entry);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid data", errors: error.errors });
+        res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors.map(e => ({ 
+            path: e.path.join('.'), 
+            message: e.message 
+          }))
+        });
       } else {
         res.status(500).json({ message: "Failed to update mood entry" });
       }
@@ -182,7 +188,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/mood-entries/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const success = await storage.deleteMoodEntry(id, DEMO_USER_ID);
+      const userId = req.userId!;
+      const success = await storage.deleteMoodEntry(id, userId);
       
       if (!success) {
         res.status(404).json({ message: "Mood entry not found" });
@@ -198,7 +205,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Trigger events routes
   app.get("/api/trigger-events", async (req, res) => {
     try {
-      const events = await storage.getTriggerEvents(DEMO_USER_ID);
+      const userId = req.userId!;
+      const events = await storage.getTriggerEvents(userId);
       res.json(events);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch trigger events" });
@@ -209,14 +217,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertTriggerEventSchema.parse({
         ...req.body,
-        userId: DEMO_USER_ID
+        userId: req.userId
       });
       
       const event = await storage.createTriggerEvent(validatedData);
       res.json(event);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid data", errors: error.errors });
+        res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors.map(e => ({ 
+            path: e.path.join('.'), 
+            message: e.message 
+          }))
+        });
       } else {
         res.status(500).json({ message: "Failed to create trigger event" });
       }
@@ -237,7 +251,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(event);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid data", errors: error.errors });
+        res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors.map(e => ({ 
+            path: e.path.join('.'), 
+            message: e.message 
+          }))
+        });
       } else {
         res.status(500).json({ message: "Failed to update trigger event" });
       }
@@ -247,7 +267,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/trigger-events/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const success = await storage.deleteTriggerEvent(id, DEMO_USER_ID);
+      const userId = req.userId!;
+      const success = await storage.deleteTriggerEvent(id, userId);
       
       if (!success) {
         res.status(404).json({ message: "Trigger event not found" });
@@ -263,7 +284,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Thoughts routes
   app.get("/api/thoughts", async (req, res) => {
     try {
-      const thoughts = await storage.getThoughts(DEMO_USER_ID);
+      const userId = req.userId!;
+      const thoughts = await storage.getThoughts(userId);
       res.json(thoughts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch thoughts" });
@@ -274,14 +296,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertThoughtSchema.parse({
         ...req.body,
-        userId: DEMO_USER_ID
+        userId: req.userId
       });
       
       const thought = await storage.createThought(validatedData);
       res.json(thought);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid data", errors: error.errors });
+        res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors.map(e => ({ 
+            path: e.path.join('.'), 
+            message: e.message 
+          }))
+        });
       } else {
         res.status(500).json({ message: "Failed to create thought" });
       }
@@ -302,7 +330,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(thought);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid data", errors: error.errors });
+        res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors.map(e => ({ 
+            path: e.path.join('.'), 
+            message: e.message 
+          }))
+        });
       } else {
         res.status(500).json({ message: "Failed to update thought" });
       }
@@ -312,7 +346,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/thoughts/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const success = await storage.deleteThought(id, DEMO_USER_ID);
+      const userId = req.userId!;
+      const success = await storage.deleteThought(id, userId);
       
       if (!success) {
         res.status(404).json({ message: "Thought not found" });
@@ -328,7 +363,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Medications routes
   app.get("/api/medications", async (req, res) => {
     try {
-      const medications = await storage.getMedications(DEMO_USER_ID);
+      const userId = req.userId!;
+      const medications = await storage.getMedications(userId);
       res.json(medications);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch medications" });
@@ -339,14 +375,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertMedicationSchema.parse({
         ...req.body,
-        userId: DEMO_USER_ID
+        userId: req.userId
       });
       
       const medication = await storage.createMedication(validatedData);
       res.json(medication);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid data", errors: error.errors });
+        res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors.map(e => ({ 
+            path: e.path.join('.'), 
+            message: e.message 
+          }))
+        });
       } else {
         res.status(500).json({ message: "Failed to create medication" });
       }
