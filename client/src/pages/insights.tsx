@@ -293,154 +293,44 @@ export default function Insights() {
   };
 
   const exportTriggersPDF = () => {
-    // Create PDF document with blue theme
+    // Create clean, minimal PDF document
     const doc = new jsPDF();
     
-    // Color definitions aligned with the app's color palette using HSL values
-    // Convert HSL to RGB for PDF usage (jsPDF requires RGB)
-    const hslToRgb = (h, s, l) => {
-      s /= 100;
-      l /= 100;
-      const k = n => (n + h / 30) % 12;
-      const a = s * Math.min(l, 1 - l);
-      const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-      return [
-        Math.round(255 * f(0)),
-        Math.round(255 * f(8)),
-        Math.round(255 * f(4))
-      ];
-    };
-
-    const colors = {
-      // From CSS variables in the app
-      primary: hslToRgb(207, 90, 54),          // --primary
-      secondary: hslToRgb(262, 83, 58),        // --chart-5 (purple)
-      dark: hslToRgb(240, 10, 3.9),            // --background
-      light: hslToRgb(0, 0, 98),               // --foreground
-      accent: hslToRgb(142, 76, 36),           // --chart-2 (green)
-      border: hslToRgb(240, 3.7, 15.9),        // --border
-      success: hslToRgb(142, 76, 36),          // Using chart-2 green
-      warning: hslToRgb(47, 96, 89),           // --chart-3 (amber)
-      alert: hslToRgb(15, 86, 30),             // --chart-4 (red)
-      muted: hslToRgb(240, 5, 64.9),           // --muted-foreground
-      lightBg: hslToRgb(240, 3.7, 15.9),       // --muted
-      card: hslToRgb(240, 10, 3.9),            // --card
-    };
-    
-    // Add stylish header with color
-    // Header gradient background (simulated with multiple rectangles)
-    for (let i = 0; i < 40; i++) {
-      const blend = i / 40; // Blend factor from 0 to 1
-      const r = Math.round(colors.dark[0] * (1 - blend) + colors.primary[0] * blend);
-      const g = Math.round(colors.dark[1] * (1 - blend) + colors.primary[1] * blend);
-      const b = Math.round(colors.dark[2] * (1 - blend) + colors.primary[2] * blend);
-      doc.setFillColor(r, g, b);
-      doc.rect(0, i, 210, 1, 'F');
-    }
-    
-    // Add app branding "Mental Health Tracker" subtitle
-    doc.setTextColor(colors.light[0], colors.light[1], colors.light[2]);
+    // Simple header
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(12);
-    doc.setFont('helvetica', 'italic');
-    doc.text('Mental Health Tracker', 105, 16, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.text('Mental Health Tracker', 105, 20, { align: 'center' });
     
-    // Header title with lighter color
-    doc.setTextColor(colors.light[0], colors.light[1], colors.light[2]);
-    doc.setFontSize(26);
+    // Main title
+    doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
-    doc.text('Trigger Events Report', 105, 28, { align: 'center' });
+    doc.text('Trigger Events Report', 105, 30, { align: 'center' });
     
-    // Add decorative elements - curved line
-    doc.setDrawColor(colors.light[0], colors.light[1], colors.light[2]);
+    // Simple line under title
+    doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.5);
+    doc.line(50, 35, 160, 35);
     
-    // Draw a curved decorative line
-    const startX = 40;
-    const endX = 170;
-    const y = 35;
-    const points = 30;
-    const amplitude = 1;
-    
-    for (let i = 0; i < points - 1; i++) {
-      const x1 = startX + (endX - startX) * (i / points);
-      const x2 = startX + (endX - startX) * ((i + 1) / points);
-      const offset1 = amplitude * Math.sin((i / points) * Math.PI * 2);
-      const offset2 = amplitude * Math.sin(((i + 1) / points) * Math.PI * 2);
-      doc.line(x1, y + offset1, x2, y + offset2);
-    }
-    
-    // Add logo/icon (brain symbol for mental health)
-    doc.setFillColor(colors.light[0], colors.light[1], colors.light[2]);
-    doc.circle(30, 20, 8, 'F');
-    
-    // Brain icon (simplified)
-    doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-    doc.setDrawColor(colors.light[0], colors.light[1], colors.light[2]);
-    doc.setLineWidth(0.2);
-    doc.circle(30, 20, 5, 'FD');
-    
-    // Draw brain curves
-    doc.setDrawColor(colors.light[0], colors.light[1], colors.light[2]);
-    doc.setLineWidth(0.3);
-    doc.line(28, 17, 28, 23);
-    doc.line(32, 17, 32, 23);
-    doc.line(26, 20, 34, 20);
-    
-    // Report info section with dark gradient background
+    // Report info section
     const infoY = 45;
-    const infoHeight = 25;
     
-    // Draw glass-like panel with app-styled background
-    doc.setFillColor(colors.dark[0], colors.dark[1], colors.dark[2]);
-    doc.roundedRect(20, infoY, 170, infoHeight, 3, 3, 'F');
-    
-    // Add subtle inner highlight
-    doc.setDrawColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+    // Simple info box
+    doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.5);
-    doc.roundedRect(20, infoY, 170, infoHeight, 3, 3, 'S');
+    doc.rect(20, infoY, 170, 20, 'S');
     
-    // Add inner border glow effect
-    doc.setDrawColor(colors.primary[0], colors.primary[1], colors.primary[2], 0.5);
-    doc.setLineWidth(0.2);
-    doc.roundedRect(21, infoY + 1, 168, infoHeight - 2, 2, 2, 'S');
-    
-    // Report metadata with icon indicators
-    doc.setTextColor(colors.light[0], colors.light[1], colors.light[2]);
+    // Report metadata
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    
-    // Calendar icon (date)
-    doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-    doc.roundedRect(25, infoY + 7, 6, 6, 1, 1, 'F');
-    doc.setFillColor(colors.dark[0], colors.dark[1], colors.dark[2]);
-    doc.roundedRect(26, infoY + 8, 4, 2, 0, 0, 'F');
+    doc.setFont('helvetica', 'normal');
     
     // Generated date
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 35, infoY + 12);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 25, infoY + 8);
     
-    // List icon (events count)
-    doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
-    doc.roundedRect(25, infoY + 16, 6, 6, 1, 1, 'F');
-    doc.setFillColor(colors.light[0], colors.light[1], colors.light[2]);
-    doc.rect(27, infoY + 17, 2, 1, 'F');
-    doc.rect(27, infoY + 19, 2, 1, 'F');
-    doc.rect(27, infoY + 21, 2, 1, 'F');
-    
-    // Event count with highlight for zero/many events
+    // Event count
     const eventCount = filteredTriggerEvents.length;
-    let countColor;
-    
-    if (eventCount === 0) {
-      countColor = colors.alert; // Red for no events
-    } else if (eventCount > 5) {
-      countColor = colors.accent; // Green for many events
-    } else {
-      countColor = colors.light; // Default color
-    }
-    
-    doc.text("Total Events:", 35, infoY + 20);
-    doc.setTextColor(countColor[0], countColor[1], countColor[2]);
-    doc.text(`${eventCount}`, 75, infoY + 20);
+    doc.text(`Total Events: ${eventCount}`, 25, infoY + 15);
     
     let yPosition = 75;
     const pageHeight = 270;
@@ -448,48 +338,23 @@ export default function Insights() {
     const rightMargin = 185;
     const textWidth = rightMargin - leftMargin;
     
-    // Apply branded footer to all pages
+    // Simple footer
     const applyFooter = (pageNum: number) => {
       doc.setPage(pageNum);
       
-      // Footer background
-      doc.setFillColor(colors.dark[0], colors.dark[1], colors.dark[2]);
-      doc.rect(0, 275, 210, 22, 'F');
-      
-      // Footer accent line
-      doc.setDrawColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-      doc.setLineWidth(0.8);
-      doc.line(20, 278, 190, 278);
-      
-      // Footer subline
-      doc.setDrawColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
-      doc.setLineWidth(0.2);
-      doc.line(20, 279, 190, 279);
-      
-      // Footer logo
-      doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-      doc.circle(30, 284, 4, 'F');
-      doc.setFillColor(colors.dark[0], colors.dark[1], colors.dark[2]);
-      doc.circle(30, 284, 2, 'F');
+      // Simple footer line
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.5);
+      doc.line(20, 280, 190, 280);
       
       // Footer text
-      doc.setTextColor(colors.light[0], colors.light[1], colors.light[2]);
+      doc.setTextColor(0, 0, 0);
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
-      doc.text('Mental Health Tracker - Confidential Report', 38, 285);
+      doc.text('Mental Health Tracker - Confidential Report', 25, 285);
       
-      // Date in footer
-      doc.setFontSize(7);
-      doc.setTextColor(colors.muted[0], colors.muted[1], colors.muted[2]);
-      doc.text(`Generated ${new Date().toLocaleDateString()}`, 38, 290);
-      
-      // Page numbers with accent box
-      doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
-      doc.roundedRect(170, 282, 20, 6, 1, 1, 'F');
-      doc.setTextColor(colors.light[0], colors.light[1], colors.light[2]);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`Page ${pageNum}`, 180, 286, { align: 'center' });
+      // Page number
+      doc.text(`Page ${pageNum}`, 170, 285);
     };
     
     // Process each trigger event
@@ -501,19 +366,15 @@ export default function Insights() {
         yPosition = 20;
       }
       
-      // Event header with gradient-like background
-      doc.setFillColor(...colors.secondary.map(c => c * 0.3));
-      doc.rect(leftMargin - 5, yPosition - 3, textWidth + 10, 12, 'F');
-      
-      // Add border to event header
-      doc.setDrawColor(...colors.secondary);
-      doc.setLineWidth(0.2);
+      // Event header
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.5);
       doc.rect(leftMargin - 5, yPosition - 3, textWidth + 10, 12, 'S');
       
       // Event title
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...colors.dark);
+      doc.setTextColor(0, 0, 0);
       doc.text(`Event ${index + 1}`, leftMargin, yPosition + 4);
       
       // Event date
@@ -522,195 +383,82 @@ export default function Insights() {
       doc.text(eventDate, rightMargin - 20, yPosition + 4, { align: 'right' });
       yPosition += 18;
       
-      // Section: Situation with colored background
-      doc.setFillColor(...colors.lightBg);
-      doc.rect(leftMargin - 3, yPosition - 3, textWidth + 6, 6, 'F');
-      
+      // Situation
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...colors.primary);
+      doc.setTextColor(0, 0, 0);
       doc.text('Situation:', leftMargin, yPosition);
       yPosition += 8;
       
-      // Situation content with a subtle box
-      doc.setDrawColor(...colors.border);
-      doc.setLineWidth(0.1);
-      
-      // Calculate height needed for situation text
+      // Situation content
       const situationLines = doc.splitTextToSize(trigger.eventSituation, textWidth - 10);
-      const situationHeight = situationLines.length * 4 + 6;
-      
-      // Draw content box
-      doc.setFillColor(252, 252, 253);
-      doc.roundedRect(leftMargin, yPosition - 4, textWidth, situationHeight, 1, 1, 'F');
-      doc.roundedRect(leftMargin, yPosition - 4, textWidth, situationHeight, 1, 1, 'S');
-      
-      // Situation text
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
-      doc.setTextColor(...colors.dark);
       doc.text(situationLines, leftMargin + 3, yPosition);
-      yPosition += situationHeight + 6;
+      yPosition += situationLines.length * 4 + 6;
       
-      // Section: Emotions with colored badges
+      // Emotions
       if (trigger.emotions.length > 0) {
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...colors.primary);
-        
-        // Emotions header with background
-        doc.setFillColor(...colors.lightBg);
-        doc.rect(leftMargin - 3, yPosition - 3, textWidth + 6, 6, 'F');
         doc.text('Emotions:', leftMargin, yPosition);
         yPosition += 8;
         
-        // Emotions as colored badges
+        const emotions = trigger.emotions.join(', ');
+        const emotionLines = doc.splitTextToSize(emotions, textWidth - 10);
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8);
-        
-        let emotionX = leftMargin;
-        const emotions = trigger.emotions.map(emotion => {
-          const emotionData = EMOTION_OPTIONS.find(e => e.value === emotion);
-          return emotionData ? emotionData.label : emotion;
-        });
-        
-        // Calculate how many emotions will fit per row
-        const maxWidth = 25;
-        const emotionsPerRow = Math.floor(textWidth / maxWidth);
-        
-        for (let i = 0; i < emotions.length; i++) {
-          const emotion = emotions[i];
-          
-          // New row if needed
-          if (i > 0 && i % emotionsPerRow === 0) {
-            emotionX = leftMargin;
-            yPosition += 10;
-          }
-          
-          // Randomize badge colors slightly
-          const colorIndex = i % 3;
-          const badgeColors = [
-            colors.primary,
-            colors.secondary,
-            colors.accent
-          ];
-          
-          // Draw emotion badge
-          doc.setFillColor(...badgeColors[colorIndex].map(c => c * 0.7));
-          const badgeWidth = Math.min(emotion.length * 2 + 10, maxWidth);
-          doc.roundedRect(emotionX, yPosition - 5, badgeWidth, 7, 1, 1, 'F');
-          
-          // Emotion text
-          doc.setTextColor(255, 255, 255);
-          doc.text(emotion, emotionX + badgeWidth/2, yPosition - 1, { align: 'center' });
-          
-          emotionX += badgeWidth + 5;
-        }
-        
-        yPosition += 10;
+        doc.setFontSize(9);
+        doc.text(emotionLines, leftMargin + 3, yPosition);
+        yPosition += emotionLines.length * 4 + 6;
       }
       
-      // Section: Action taken
+      // Action taken
       if (trigger.actionTaken) {
-        doc.setFillColor(...colors.lightBg);
-        doc.rect(leftMargin - 3, yPosition - 3, textWidth + 6, 6, 'F');
-        
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...colors.primary);
         doc.text('Action Taken:', leftMargin, yPosition);
         yPosition += 8;
         
-        // Calculate height needed for action text
         const actionLines = doc.splitTextToSize(trigger.actionTaken, textWidth - 10);
-        const actionHeight = actionLines.length * 4 + 6;
-        
-        // Draw content box
-        doc.setFillColor(252, 252, 253);
-        doc.setDrawColor(...colors.border);
-        doc.roundedRect(leftMargin, yPosition - 4, textWidth, actionHeight, 1, 1, 'F');
-        doc.roundedRect(leftMargin, yPosition - 4, textWidth, actionHeight, 1, 1, 'S');
-        
-        // Action text
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.setTextColor(...colors.dark);
         doc.text(actionLines, leftMargin + 3, yPosition);
-        yPosition += actionHeight + 6;
+        yPosition += actionLines.length * 4 + 6;
       }
       
-      // Section: Consequences with colored icons
+      // Consequences
       if (trigger.consequences.length > 0 && trigger.consequences.some(c => c.trim())) {
-        doc.setFillColor(...colors.lightBg);
-        doc.rect(leftMargin - 3, yPosition - 3, textWidth + 6, 6, 'F');
-        
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...colors.primary);
         doc.text('Consequences:', leftMargin, yPosition);
         yPosition += 8;
         
-        // Draw box around all consequences
         const consequenceItems = trigger.consequences.filter(c => c.trim());
-        let totalConsequencesHeight = 0;
-        
-        // Calculate total height needed
-        consequenceItems.forEach(consequence => {
-          const consequenceLines = doc.splitTextToSize(consequence, textWidth - 15);
-          totalConsequencesHeight += consequenceLines.length * 4 + 5;
+        consequenceItems.forEach((consequence) => {
+          const consequenceLines = doc.splitTextToSize(`• ${consequence}`, textWidth - 10);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9);
+          doc.text(consequenceLines, leftMargin + 3, yPosition);
+          yPosition += consequenceLines.length * 4 + 3;
         });
-        
-        // Draw content box
-        doc.setFillColor(252, 252, 253);
-        doc.setDrawColor(...colors.border);
-        doc.roundedRect(leftMargin, yPosition - 4, textWidth, totalConsequencesHeight + 2, 1, 1, 'F');
-        doc.roundedRect(leftMargin, yPosition - 4, textWidth, totalConsequencesHeight + 2, 1, 1, 'S');
-        
-        // Add each consequence with an icon
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.setTextColor(...colors.dark);
-        
-        consequenceItems.forEach((consequence, i) => {
-          // Draw colored bullet
-          doc.setFillColor(...colors.secondary);
-          doc.circle(leftMargin + 4, yPosition, 1.5, 'F');
-          
-          // Consequence text
-          const consequenceLines = doc.splitTextToSize(consequence, textWidth - 15);
-          doc.text(consequenceLines, leftMargin + 8, yPosition);
-          yPosition += consequenceLines.length * 4 + 5;
-        });
-        
         yPosition += 3;
       }
       
-      // Duration info with color coding
+      // Duration
       const duration = trigger.endDate 
         ? Math.ceil((new Date(trigger.endDate).getTime() - new Date(trigger.startDate).getTime()) / (1000 * 60 * 60 * 24))
         : null;
       
-      const durationText = duration ? `${duration} days` : 'Ongoing';
-      const durationColor = !duration ? colors.warning : 
-                           duration <= 3 ? colors.success : 
-                           duration <= 7 ? colors.primary : 
-                           colors.secondary;
-      
-      // Duration badge
-      doc.setFillColor(...durationColor);
-      doc.roundedRect(leftMargin, yPosition - 5, 50, 7, 1, 1, 'F');
-      
-      // Duration text
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
-      doc.setTextColor(255, 255, 255);
-      doc.text(`Duration: ${durationText}`, leftMargin + 25, yPosition - 1, { align: 'center' });
+      const durationText = duration ? `Duration: ${duration} days` : 'Duration: Ongoing';
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text(durationText, leftMargin, yPosition);
       
       // Add spacing before next event
       yPosition += 15;
       
       // Add a divider line
-      doc.setDrawColor(...colors.border);
+      doc.setDrawColor(0, 0, 0);
       doc.setLineWidth(0.2);
       doc.line(leftMargin, yPosition - 5, rightMargin, yPosition - 5);
       
