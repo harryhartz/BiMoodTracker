@@ -80,9 +80,14 @@ export const MOOD_TAG_OPTIONS = [
   { value: 'determined', label: 'Determined', emoji: '💪' },
 ];
 
-export const formatTimeAgo = (date: Date): string => {
+export const formatTimeAgo = (date: Date | string | null | undefined): string => {
+  if (!date) return 'Unknown time';
+  
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(dateObj.getTime())) return 'Invalid date';
+  
   const now = new Date();
-  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+  const diffInMinutes = Math.floor((now.getTime() - dateObj.getTime()) / (1000 * 60));
   
   if (diffInMinutes < 1) return 'Just now';
   if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'} ago`;
@@ -93,7 +98,7 @@ export const formatTimeAgo = (date: Date): string => {
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 7) return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
   
-  return date.toLocaleDateString();
+  return dateObj.toLocaleDateString();
 };
 
 export const getCurrentDate = (): string => {
