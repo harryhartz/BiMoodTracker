@@ -424,20 +424,48 @@ export default function Insights() {
         yPosition = 30;
       }
       
-      // Modern event card with shadow effect
-      const cardHeight = 100; // Will be adjusted based on content
+      // Pre-calculate total content height for proper card sizing
+      let contentHeight = 30; // Base height for header
       
-      // Card shadow (multiple layers for depth)
+      // Calculate situation height
+      const calcSituationLines = doc.splitTextToSize(trigger.eventSituation, textWidth - 25);
+      contentHeight += Math.max(calcSituationLines.length * 4.5 + 16, 26);
+      
+      // Calculate emotions height
+      if (trigger.emotions.length > 0) {
+        const emotionRows = Math.ceil(trigger.emotions.length / 5); // Estimate 5 emotions per row
+        contentHeight += emotionRows * 16 + 20;
+      }
+      
+      // Calculate actions height
+      if (trigger.actionTaken) {
+        const calcActionLines = doc.splitTextToSize(trigger.actionTaken, textWidth - 30);
+        contentHeight += Math.max(calcActionLines.length * 4.5, 10) + 18;
+      }
+      
+      // Calculate consequences height
+      if (trigger.consequences.length > 0 && trigger.consequences.some(c => c.trim())) {
+        const consequenceItems = trigger.consequences.filter(c => c.trim());
+        consequenceItems.forEach((consequence) => {
+          const calcConsequenceLines = doc.splitTextToSize(consequence, textWidth - 30);
+          contentHeight += calcConsequenceLines.length * 4.5 + 6;
+        });
+        contentHeight += 15;
+      }
+      
+      const finalCardHeight = contentHeight + 15; // Add padding
+      
+      // Draw card with proper height including shadows
       doc.setFillColor(220, 220, 220);
-      doc.roundedRect(leftMargin + 2, yPosition + 2, textWidth - 2, cardHeight, 8, 8, 'F');
+      doc.roundedRect(leftMargin + 2, yPosition + 2, textWidth - 2, finalCardHeight, 8, 8, 'F');
       doc.setFillColor(230, 230, 230);
-      doc.roundedRect(leftMargin + 1, yPosition + 1, textWidth - 1, cardHeight, 8, 8, 'F');
+      doc.roundedRect(leftMargin + 1, yPosition + 1, textWidth - 1, finalCardHeight, 8, 8, 'F');
       
       // Main card background
       doc.setFillColor(255, 255, 255);
       doc.setDrawColor(226, 232, 240);
       doc.setLineWidth(0.5);
-      doc.roundedRect(leftMargin, yPosition, textWidth, cardHeight, 8, 8, 'FD');
+      doc.roundedRect(leftMargin, yPosition, textWidth, finalCardHeight, 8, 8, 'FD');
       
       let cardY = yPosition + 12;
       
@@ -515,14 +543,16 @@ export default function Insights() {
             cardY += 16;
           }
           
-          // Perfect emotion pill with proper centering
+          // Round rectangle with colored outline
           const emotionColor = emotionColors[i % emotionColors.length];
-          doc.setFillColor(emotionColor[0], emotionColor[1], emotionColor[2]);
-          doc.roundedRect(emotionX, cardY - 6, pillWidth, 12, 6, 6, 'F');
+          doc.setFillColor(255, 255, 255); // White background
+          doc.setDrawColor(emotionColor[0], emotionColor[1], emotionColor[2]);
+          doc.setLineWidth(1.5);
+          doc.roundedRect(emotionX, cardY - 6, pillWidth, 12, 3, 3, 'FD');
           
           doc.setFontSize(8);
           doc.setFont('times', 'bold');
-          doc.setTextColor(255, 255, 255);
+          doc.setTextColor(emotionColor[0], emotionColor[1], emotionColor[2]);
           doc.text(emotionLabel, emotionX + pillWidth/2, cardY, { align: 'center' });
           
           emotionX += pillWidth + 8;
@@ -580,9 +610,8 @@ export default function Insights() {
         cardY += 5;
       }
       
-      // Adjust card height based on content
-      const actualCardHeight = cardY - yPosition + 8;
-      yPosition += actualCardHeight + 20;
+      // Move to next card position
+      yPosition += finalCardHeight + 20;
     });
 
     // Apply footer to all pages
