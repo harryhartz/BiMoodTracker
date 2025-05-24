@@ -688,15 +688,15 @@ export default function Insights() {
                       dataKey="sleepQuality" 
                       stroke="#9CA3AF"
                       tick={{ fill: '#9CA3AF' }}
-                      label={{ value: 'Sleep Quality (1-5)', position: 'insideBottom', offset: -5, style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
-                      domain={[1, 5]}
+                      label={{ value: 'Sleep Quality (0-4)', position: 'insideBottom', offset: -5, style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
+                      domain={[0, 4]}
                     />
                     <YAxis 
                       dataKey="nextDayMood"
                       stroke="#9CA3AF"
                       tick={{ fill: '#9CA3AF' }}
-                      label={{ value: 'Next Day Mood (-3 to +3)', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
-                      domain={[-3, 3]}
+                      label={{ value: 'Next Day Mood (-2 to +2)', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
+                      domain={[-2, 2]}
                     />
                     <Tooltip 
                       contentStyle={{ 
@@ -706,7 +706,7 @@ export default function Insights() {
                         color: '#F9FAFB'
                       }}
                       formatter={(value, name) => [
-                        name === 'nextDayMood' ? `Mood: ${value}` : `Sleep: ${value}/5`,
+                        name === 'nextDayMood' ? `Mood: ${value}` : `Sleep: ${value}/4`,
                         name === 'nextDayMood' ? 'Next Day Mood' : 'Sleep Quality'
                       ]}
                     />
@@ -838,10 +838,10 @@ export default function Insights() {
                       label={{ value: 'Date', position: 'insideBottom', offset: -5, style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
                     />
                     <YAxis 
-                      domain={[-3, 3]}
+                      domain={[-2, 2]}
                       stroke="#9CA3AF"
                       tick={{ fill: '#9CA3AF' }}
-                      label={{ value: 'Mood Intensity (-3 to +3)', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
+                      label={{ value: 'Mood Intensity (-2 to +2)', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
                     />
                     <Tooltip 
                       contentStyle={{ 
