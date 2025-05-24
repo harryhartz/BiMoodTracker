@@ -293,232 +293,295 @@ export default function Insights() {
   };
 
   const exportTriggersPDF = () => {
-    // Create clean, minimal PDF document
+    // Create professional PDF document
     const doc = new jsPDF();
     
-    // Simple header
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Mental Health Tracker', 105, 20, { align: 'center' });
+    // App color scheme (matching your dark theme)
+    const colors = {
+      primary: [79, 130, 255],     // Blue from your app
+      secondary: [139, 92, 246],   // Purple accent
+      success: [34, 197, 94],      // Green
+      warning: [251, 191, 36],     // Yellow
+      danger: [239, 68, 68],       // Red
+      text: [15, 23, 42],          // Dark text
+      textMuted: [100, 116, 139],  // Muted text
+      background: [248, 250, 252], // Light background
+      border: [226, 232, 240],     // Light border
+      cardBg: [255, 255, 255]      // White cards
+    };
     
-    // Main title
-    doc.setFontSize(20);
+    // === COVER PAGE ===
+    // Modern header with gradient simulation
+    for (let i = 0; i < 50; i++) {
+      const opacity = 1 - (i / 50);
+      const r = Math.round(colors.primary[0] + (255 - colors.primary[0]) * (i / 50));
+      const g = Math.round(colors.primary[1] + (255 - colors.primary[1]) * (i / 50));
+      const b = Math.round(colors.primary[2] + (255 - colors.primary[2]) * (i / 50));
+      doc.setFillColor(r, g, b);
+      doc.rect(0, i * 2, 210, 2, 'F');
+    }
+    
+    // App branding
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(28);
     doc.setFont('helvetica', 'bold');
-    doc.text('Trigger Events Report', 105, 30, { align: 'center' });
+    doc.text('Mental Health Tracker', 105, 40, { align: 'center' });
     
-    // Simple line under title
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    doc.line(50, 35, 160, 35);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Trigger Events Analysis Report', 105, 55, { align: 'center' });
     
-    // Report info section
-    const infoY = 45;
+    // Report metadata card
+    doc.setFillColor(...colors.cardBg);
+    doc.setDrawColor(...colors.border);
+    doc.roundedRect(30, 80, 150, 60, 5, 5, 'FD');
     
-    // Simple info box
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    doc.rect(20, infoY, 170, 20, 'S');
+    // Report stats
+    doc.setTextColor(...colors.text);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Report Summary', 105, 95, { align: 'center' });
     
-    // Report metadata
-    doc.setTextColor(0, 0, 0);
+    const eventCount = filteredTriggerEvents.length;
+    const dateRange = `${new Date().toLocaleDateString()} - ${new Date().toLocaleDateString()}`;
+    
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 40, 110);
+    doc.text(`Total Events: ${eventCount}`, 40, 120);
+    doc.text(`Date Range: ${dateRange}`, 40, 130);
     
-    // Generated date
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 25, infoY + 8);
+    // Key insights box
+    if (eventCount > 0) {
+      const emotionCounts = {};
+      filteredTriggerEvents.forEach(event => {
+        event.emotions.forEach(emotion => {
+          emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1;
+        });
+      });
+      
+      const topEmotion = Object.entries(emotionCounts).sort((a, b) => b[1] - a[1])[0];
+      
+      doc.setFillColor(245, 245, 245);
+      doc.roundedRect(30, 160, 150, 40, 5, 5, 'FD');
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colors.primary);
+      doc.text('Key Insights', 40, 175);
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colors.text);
+      if (topEmotion) {
+        doc.text(`Most common emotion: ${topEmotion[0]} (${topEmotion[1]} times)`, 40, 185);
+      }
+      doc.text(`Average events per period: ${(eventCount / 30).toFixed(1)}`, 40, 195);
+    }
     
-    // Event count
-    const eventCount = filteredTriggerEvents.length;
-    doc.text(`Total Events: ${eventCount}`, 25, infoY + 15);
+    // Start new page for events
+    doc.addPage();
     
-    let yPosition = 75;
+    let yPosition = 30;
     const pageHeight = 270;
-    const leftMargin = 25;
-    const rightMargin = 185;
+    const leftMargin = 20;
+    const rightMargin = 190;
     const textWidth = rightMargin - leftMargin;
     
-    // Simple footer
+    // Professional footer with app branding
     const applyFooter = (pageNum: number) => {
       doc.setPage(pageNum);
       
-      // Simple footer line
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(0.5);
-      doc.line(20, 280, 190, 280);
+      // Footer background
+      doc.setFillColor(...colors.background);
+      doc.rect(0, 275, 210, 22, 'F');
       
-      // Footer text
-      doc.setTextColor(0, 0, 0);
+      // Footer line
+      doc.setDrawColor(...colors.primary);
+      doc.setLineWidth(1);
+      doc.line(20, 278, 190, 278);
+      
+      // Footer content
+      doc.setTextColor(...colors.textMuted);
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
       doc.text('Mental Health Tracker - Confidential Report', 25, 285);
+      doc.text(`Generated on ${new Date().toLocaleDateString()}`, 25, 290);
       
-      // Page number
-      doc.text(`Page ${pageNum}`, 170, 285);
+      // Page number with styling
+      doc.setFillColor(...colors.primary);
+      doc.roundedRect(170, 282, 15, 8, 2, 2, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${pageNum}`, 177.5, 286.5, { align: 'center' });
     };
     
-    // Process each trigger event with vertical block layout
+    // === EVENT CARDS ===
     filteredTriggerEvents.forEach((trigger, index) => {
       // Check if we need a new page
-      if (yPosition > pageHeight - 100) {
+      if (yPosition > pageHeight - 120) {
         doc.addPage();
         applyFooter(doc.getNumberOfPages());
-        yPosition = 20;
+        yPosition = 30;
       }
       
-      // Header: Date + Trigger Severity (colored tag)
+      // Modern event card with shadow effect
+      const cardHeight = 100; // Will be adjusted based on content
+      
+      // Card shadow (multiple layers for depth)
+      doc.setFillColor(220, 220, 220);
+      doc.roundedRect(leftMargin + 2, yPosition + 2, textWidth - 2, cardHeight, 8, 8, 'F');
+      doc.setFillColor(230, 230, 230);
+      doc.roundedRect(leftMargin + 1, yPosition + 1, textWidth - 1, cardHeight, 8, 8, 'F');
+      
+      // Main card background
+      doc.setFillColor(255, 255, 255);
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(leftMargin, yPosition, textWidth, cardHeight, 8, 8, 'FD');
+      
+      let cardY = yPosition + 12;
+      
+      // Card header with timeline dot
+      doc.setFillColor(79, 130, 255);
+      doc.circle(leftMargin + 8, cardY, 3, 'F');
+      
+      // Event date and severity
       const eventDate = trigger.createdAt ? new Date(trigger.createdAt).toLocaleDateString() : 'No date';
       doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 0, 0);
-      doc.text(eventDate, leftMargin, yPosition);
+      doc.setTextColor(15, 23, 42);
+      doc.text(eventDate, leftMargin + 18, cardY + 1);
       
-      // Severity tag (light gray background with black text)
+      // Severity badge with appropriate color
       const severity = trigger.emotions.length > 3 ? 'High' : trigger.emotions.length > 1 ? 'Medium' : 'Low';
-      doc.setFillColor(240, 240, 240); // Light gray
-      doc.setDrawColor(0, 0, 0);
-      doc.roundedRect(leftMargin + 50, yPosition - 4, 25, 8, 2, 2, 'FD');
+      const severityColor = severity === 'High' ? colors.danger : severity === 'Medium' ? colors.warning : colors.success;
+      
+      doc.setFillColor(...severityColor);
+      doc.roundedRect(rightMargin - 35, cardY - 4, 30, 10, 5, 5, 'F');
       doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.text(severity, leftMargin + 62.5, yPosition, { align: 'center' });
-      yPosition += 15;
-      
-      // What happened? → In a light grey speech bubble box
-      doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 0, 0);
-      doc.text('What happened?', leftMargin, yPosition);
-      yPosition += 8;
+      doc.setTextColor(255, 255, 255);
+      doc.text(severity, rightMargin - 20, cardY + 1, { align: 'center' });
       
-      // Speech bubble background (light gray)
-      const situationLines = doc.splitTextToSize(trigger.eventSituation, textWidth - 15);
-      const situationHeight = situationLines.length * 4 + 8;
-      doc.setFillColor(245, 245, 245); // Light gray
-      doc.setDrawColor(200, 200, 200); // Gray border
-      doc.roundedRect(leftMargin, yPosition - 4, textWidth, situationHeight, 3, 3, 'FD');
+      cardY += 18;
       
-      // Situation text
+      // Situation section with modern styling
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(79, 130, 255);
+      doc.text('SITUATION', leftMargin + 8, cardY);
+      cardY += 8;
+      
+      // Situation content in a subtle box
+      const situationLines = doc.splitTextToSize(trigger.eventSituation, textWidth - 25);
+      const situationHeight = Math.max(situationLines.length * 4 + 8, 16);
+      
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.roundedRect(leftMargin + 8, cardY - 4, textWidth - 20, situationHeight, 4, 4, 'FD');
+      
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
-      doc.setTextColor(0, 0, 0);
-      doc.text(situationLines, leftMargin + 5, yPosition + 2);
-      yPosition += situationHeight + 8;
+      doc.setTextColor(15, 23, 42);
+      doc.text(situationLines, leftMargin + 12, cardY + 2);
+      cardY += situationHeight + 8;
       
-      // Emotions → Display as pill-shaped color tags
+      // Emotions with beautiful pill design
       if (trigger.emotions.length > 0) {
-        doc.setFontSize(10);
+        doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
-        doc.text('Emotions', leftMargin, yPosition);
-        yPosition += 10;
+        doc.setTextColor(139, 92, 246);
+        doc.text('EMOTIONS', leftMargin + 8, cardY);
+        cardY += 8;
         
-        let emotionX = leftMargin;
-        let currentRowY = yPosition;
+        let emotionX = leftMargin + 8;
+        const emotionColors = [
+          [59, 130, 246],   // Blue
+          [16, 185, 129],   // Emerald
+          [245, 101, 101],  // Red
+          [251, 191, 36],   // Amber
+          [139, 92, 246],   // Violet
+          [236, 72, 153]    // Pink
+        ];
         
         trigger.emotions.forEach((emotion, i) => {
           const emotionData = EMOTION_OPTIONS.find(e => e.value === emotion);
           const emotionLabel = emotionData ? emotionData.label : emotion;
-          
-          // Calculate pill width
-          const pillWidth = Math.max(emotionLabel.length * 1.5 + 8, 20);
+          const pillWidth = Math.max(emotionLabel.length * 1.8 + 12, 25);
           
           // Check if we need a new row
-          if (emotionX + pillWidth > rightMargin) {
-            emotionX = leftMargin;
-            currentRowY += 12;
+          if (emotionX + pillWidth > rightMargin - 8) {
+            emotionX = leftMargin + 8;
+            cardY += 14;
           }
           
-          // Draw pill-shaped emotion tag with subtle color
-          const colors = [
-            [200, 220, 255], // Light blue
-            [220, 255, 200], // Light green  
-            [255, 220, 200], // Light orange
-            [255, 200, 220], // Light pink
-            [220, 200, 255]  // Light purple
-          ];
-          const colorIndex = i % colors.length;
-          doc.setFillColor(...colors[colorIndex]);
-          doc.setDrawColor(150, 150, 150);
-          doc.roundedRect(emotionX, currentRowY - 4, pillWidth, 8, 4, 4, 'FD');
+          // Modern emotion pill
+          const emotionColor = emotionColors[i % emotionColors.length];
+          doc.setFillColor(...emotionColor);
+          doc.roundedRect(emotionX, cardY - 5, pillWidth, 10, 5, 5, 'F');
           
-          // Emotion text
           doc.setFontSize(7);
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(0, 0, 0);
-          doc.text(emotionLabel, emotionX + pillWidth/2, currentRowY, { align: 'center' });
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(255, 255, 255);
+          doc.text(emotionLabel, emotionX + pillWidth/2, cardY, { align: 'center' });
           
-          emotionX += pillWidth + 5;
+          emotionX += pillWidth + 6;
         });
-        
-        yPosition = currentRowY + 15;
+        cardY += 15;
       }
       
-      // Actions → Bulleted list inside light yellow box
+      // Actions with checkbox style
       if (trigger.actionTaken) {
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Actions', leftMargin, yPosition);
-        yPosition += 8;
-        
-        // Light yellow box background
-        const actionLines = doc.splitTextToSize(trigger.actionTaken, textWidth - 15);
-        const actionHeight = actionLines.length * 4 + 8;
-        doc.setFillColor(255, 255, 220); // Light yellow
-        doc.setDrawColor(200, 200, 150); // Yellow-ish border
-        doc.roundedRect(leftMargin, yPosition - 4, textWidth, actionHeight, 3, 3, 'FD');
-        
-        // Action text with bullet
-        doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`• ${actionLines.join(' ')}`, leftMargin + 5, yPosition + 2);
-        yPosition += actionHeight + 8;
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(34, 197, 94);
+        doc.text('ACTIONS TAKEN', leftMargin + 8, cardY);
+        cardY += 8;
+        
+        // Action item with checkbox
+        doc.setFillColor(34, 197, 94);
+        doc.roundedRect(leftMargin + 8, cardY - 4, 6, 6, 1, 1, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(6);
+        doc.text('✓', leftMargin + 11, cardY - 1, { align: 'center' });
+        
+        const actionLines = doc.splitTextToSize(trigger.actionTaken, textWidth - 30);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(15, 23, 42);
+        doc.text(actionLines, leftMargin + 18, cardY);
+        cardY += Math.max(actionLines.length * 4, 8) + 6;
       }
       
-      // Consequences → Red border or faded red box
+      // Consequences with warning style
       if (trigger.consequences.length > 0 && trigger.consequences.some(c => c.trim())) {
-        doc.setFontSize(10);
+        doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
-        doc.text('Consequences', leftMargin, yPosition);
-        yPosition += 8;
+        doc.setTextColor(239, 68, 68);
+        doc.text('CONSEQUENCES', leftMargin + 8, cardY);
+        cardY += 8;
         
         const consequenceItems = trigger.consequences.filter(c => c.trim());
-        let totalHeight = 0;
-        
-        // Calculate total height needed
-        consequenceItems.forEach(consequence => {
-          const lines = doc.splitTextToSize(`• ${consequence}`, textWidth - 15);
-          totalHeight += lines.length * 4 + 2;
-        });
-        totalHeight += 6;
-        
-        // Faded red box
-        doc.setFillColor(255, 240, 240); // Light red/pink
-        doc.setDrawColor(255, 100, 100); // Red border
-        doc.setLineWidth(1);
-        doc.roundedRect(leftMargin, yPosition - 4, textWidth, totalHeight, 3, 3, 'FD');
-        
-        // Consequence items
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.setTextColor(0, 0, 0);
-        
         consequenceItems.forEach((consequence) => {
-          const consequenceLines = doc.splitTextToSize(`• ${consequence}`, textWidth - 15);
-          doc.text(consequenceLines, leftMargin + 5, yPosition + 2);
-          yPosition += consequenceLines.length * 4 + 2;
+          // Warning icon
+          doc.setFillColor(239, 68, 68);
+          doc.circle(leftMargin + 11, cardY - 1, 2, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(5);
+          doc.text('!', leftMargin + 11, cardY - 1, { align: 'center' });
+          
+          const consequenceLines = doc.splitTextToSize(consequence, textWidth - 30);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8);
+          doc.setTextColor(15, 23, 42);
+          doc.text(consequenceLines, leftMargin + 18, cardY);
+          cardY += consequenceLines.length * 4 + 4;
         });
-        
-        yPosition += 10;
       }
       
-      // Add spacing before next event
-      yPosition += 10;
-      
-      // Event divider line
-      doc.setDrawColor(200, 200, 200);
-      doc.setLineWidth(0.5);
-      doc.line(leftMargin, yPosition, rightMargin, yPosition);
-      yPosition += 15;
+      // Adjust card height based on content
+      const actualCardHeight = cardY - yPosition + 8;
+      yPosition += actualCardHeight + 20;
     });
 
     // Apply footer to all pages
