@@ -287,10 +287,11 @@ export default function TriggerTracking() {
                     <FormLabel className="text-white">Consequences/Outcomes</FormLabel>
                     {consequences.map((consequence, index) => (
                       <div key={index} className="flex gap-3">
-                        <Input
+                        <Textarea
                           value={consequence}
                           onChange={(e) => updateConsequence(index, e.target.value)}
                           placeholder="What happened as a result?"
+                          rows={2}
                           className="flex-1 bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
                         />
                         {consequences.length > 1 && (
