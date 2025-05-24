@@ -511,7 +511,7 @@ export default function Insights() {
                 {/* Calendar days */}
                 {Array.from({ length: 42 }, (_, index) => {
                   const today = new Date();
-                  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // Current month
+                  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
                   const firstDayOfWeek = startOfMonth.getDay();
                   const dayIndex = index - firstDayOfWeek;
                   const currentDate = new Date(startOfMonth);
@@ -525,14 +525,13 @@ export default function Insights() {
                   const morningCount = dayData?.morningCount || 0;
                   const eveningCount = dayData?.eveningCount || 0;
                   
-                  // Color intensity based on mood (darker = better mood)
                   const getIntensityColor = (intensity: number) => {
-                    if (intensity === 0) return 'bg-gray-700'; // No data
-                    if (intensity >= 2) return 'bg-green-600'; // Very positive
-                    if (intensity >= 1) return 'bg-green-500'; // Positive
-                    if (intensity >= 0) return 'bg-yellow-500'; // Neutral
-                    if (intensity >= -1) return 'bg-orange-500'; // Negative
-                    return 'bg-red-500'; // Very negative
+                    if (intensity === 0) return 'bg-gray-700';
+                    if (intensity >= 2) return 'bg-green-600';
+                    if (intensity >= 1) return 'bg-green-500';
+                    if (intensity >= 0) return 'bg-yellow-500';
+                    if (intensity >= -1) return 'bg-orange-500';
+                    return 'bg-red-500';
                   };
                   
                   const tooltipText = isCurrentMonth 
@@ -550,7 +549,6 @@ export default function Insights() {
                       title={tooltipText}
                     >
                       {isCurrentMonth ? currentDate.getDate() : ''}
-                      {/* Small indicator for partial data */}
                       {isCurrentMonth && (morningCount > 0 || eveningCount > 0) && (morningCount + eveningCount < 2) && (
                         <div className="absolute top-0 right-0 w-1 h-1 bg-white rounded-full opacity-60"></div>
                       )}
@@ -558,19 +556,18 @@ export default function Insights() {
                   );
                 })}
               </div>
-                
-                {/* Legend */}
-                <div className="flex items-center justify-center space-x-4 text-xs">
-                  <span className="text-gray-400">Less positive</span>
-                  <div className="flex space-x-1">
-                    <div className="w-3 h-3 bg-red-500 rounded"></div>
-                    <div className="w-3 h-3 bg-orange-500 rounded"></div>
-                    <div className="w-3 h-3 bg-yellow-500 rounded"></div>
-                    <div className="w-3 h-3 bg-green-500 rounded"></div>
-                    <div className="w-3 h-3 bg-green-600 rounded"></div>
-                  </div>
-                  <span className="text-gray-400">More positive</span>
+              
+              {/* Legend */}
+              <div className="flex items-center justify-center space-x-4 text-xs">
+                <span className="text-gray-400">Less positive</span>
+                <div className="flex space-x-1">
+                  <div className="w-3 h-3 bg-red-500 rounded"></div>
+                  <div className="w-3 h-3 bg-orange-500 rounded"></div>
+                  <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+                  <div className="w-3 h-3 bg-green-500 rounded"></div>
+                  <div className="w-3 h-3 bg-green-600 rounded"></div>
                 </div>
+                <span className="text-gray-400">More positive</span>
               </div>
             </div>
           </CardContent>
