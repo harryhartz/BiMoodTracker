@@ -35,9 +35,12 @@ export const triggerEvents = pgTable("trigger_events", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   eventSituation: text("event_situation").notNull(),
-  emotion: text("emotion").notNull(),
+  emotions: text("emotions").array().notNull(),
   actionTaken: text("action_taken").notNull(),
-  consequence: text("consequence").notNull(),
+  consequences: text("consequences").array().notNull(),
+  startDate: text("start_date").notNull(), // YYYY-MM-DD format
+  endDate: text("end_date"), // YYYY-MM-DD format, can be null for ongoing
+  durationDays: integer("duration_days"), // auto-calculated
   remindLater: boolean("remind_later").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -100,12 +103,15 @@ export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({
 export const insertTriggerEventSchema = createInsertSchema(triggerEvents).omit({
   id: true,
   createdAt: true,
+  durationDays: true, // auto-calculated
 }).extend({
   userId: z.number(),
   eventSituation: z.string().min(1),
-  emotion: z.string().min(1),
+  emotions: z.array(z.string()).min(1, "At least one emotion is required"),
   actionTaken: z.string().min(1),
-  consequence: z.string().min(1),
+  consequences: z.array(z.string()).min(1, "At least one consequence is required"),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format").optional().nullable(),
   remindLater: z.boolean().default(false),
 });
 

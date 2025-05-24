@@ -2,27 +2,27 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Save, Clock, Edit, Plus } from "lucide-react";
+import { Save, Clock, Edit, Plus, X, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import EmotionWheel from "@/components/emotion-wheel";
 import { apiRequest } from "@/lib/queryClient";
 import { insertTriggerEventSchema } from "@shared/schema";
-import { formatTimeAgo, ACTION_OPTIONS, EMOTION_OPTIONS } from "@/lib/constants";
+import { formatTimeAgo, ACTION_OPTIONS, EMOTION_OPTIONS, getCurrentDate } from "@/lib/constants";
 import type { TriggerEvent, InsertTriggerEvent } from "@shared/schema";
 import { z } from "zod";
 
 const formSchema = insertTriggerEventSchema.omit({ userId: true });
 
 export default function TriggerTracking() {
-  const [selectedActions, setSelectedActions] = useState<string[]>([]);
-  const [showCustomEmotion, setShowCustomEmotion] = useState(false);
-  const [customEmotion, setCustomEmotion] = useState('');
+  const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
+  const [consequences, setConsequences] = useState<string[]>(['']);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -30,9 +30,11 @@ export default function TriggerTracking() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       eventSituation: '',
-      emotion: '',
+      emotions: [],
       actionTaken: '',
-      consequence: '',
+      consequences: [],
+      startDate: getCurrentDate(),
+      endDate: null,
       remindLater: false,
     },
   });

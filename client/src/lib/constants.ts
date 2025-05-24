@@ -14,18 +14,41 @@ export const MOOD_OPTIONS = [
 ];
 
 export const EMOTION_OPTIONS = [
-  { value: 'anger', label: 'Anger', emoji: '😡' },
-  { value: 'fear', label: 'Fear', emoji: '😨' },
-  { value: 'shame', label: 'Shame', emoji: '😳' },
-  { value: 'sadness', label: 'Sadness', emoji: '😢' },
-  { value: 'frustration', label: 'Frustration', emoji: '😤' },
-  { value: 'overwhelm', label: 'Overwhelm', emoji: '🤯' },
-  { value: 'anxiety', label: 'Anxiety', emoji: '😰' },
-  { value: 'disappointment', label: 'Disappointed', emoji: '😞' },
-  { value: 'guilt', label: 'Guilt', emoji: '😣' },
-  { value: 'jealousy', label: 'Jealousy', emoji: '😒' },
-  { value: 'panic', label: 'Panic', emoji: '😱' },
-  { value: 'irritation', label: 'Irritation', emoji: '😠' },
+  // Negative emotions
+  { value: 'helpless', label: 'Helpless', emoji: '😔', category: 'negative' },
+  { value: 'frustrated', label: 'Frustrated', emoji: '😤', category: 'negative' },
+  { value: 'ashamed', label: 'Ashamed', emoji: '😳', category: 'negative' },
+  { value: 'hopeless', label: 'Hopeless', emoji: '😞', category: 'negative' },
+  { value: 'overwhelmed', label: 'Overwhelmed', emoji: '🤯', category: 'negative' },
+  { value: 'anxious', label: 'Anxious', emoji: '😰', category: 'negative' },
+  { value: 'angry', label: 'Angry', emoji: '😡', category: 'negative' },
+  { value: 'fearful', label: 'Fearful', emoji: '😨', category: 'negative' },
+  { value: 'sad', label: 'Sad', emoji: '😢', category: 'negative' },
+  { value: 'guilty', label: 'Guilty', emoji: '😣', category: 'negative' },
+  { value: 'disappointed', label: 'Disappointed', emoji: '😞', category: 'negative' },
+  { value: 'stressed', label: 'Stressed', emoji: '😫', category: 'negative' },
+  { value: 'lonely', label: 'Lonely', emoji: '😔', category: 'negative' },
+  { value: 'worried', label: 'Worried', emoji: '😟', category: 'negative' },
+  { value: 'irritated', label: 'Irritated', emoji: '😠', category: 'negative' },
+  { value: 'panic', label: 'Panic', emoji: '😱', category: 'negative' },
+  { value: 'rejected', label: 'Rejected', emoji: '💔', category: 'negative' },
+  { value: 'jealous', label: 'Jealous', emoji: '😒', category: 'negative' },
+  
+  // Positive emotions
+  { value: 'relieved', label: 'Relieved', emoji: '😮‍💨', category: 'positive' },
+  { value: 'hopeful', label: 'Hopeful', emoji: '🌟', category: 'positive' },
+  { value: 'grateful', label: 'Grateful', emoji: '🙏', category: 'positive' },
+  { value: 'proud', label: 'Proud', emoji: '😌', category: 'positive' },
+  { value: 'excited', label: 'Excited', emoji: '🤩', category: 'positive' },
+  { value: 'content', label: 'Content', emoji: '😊', category: 'positive' },
+  { value: 'peaceful', label: 'Peaceful', emoji: '☮️', category: 'positive' },
+  { value: 'motivated', label: 'Motivated', emoji: '💪', category: 'positive' },
+  
+  // Neutral emotions
+  { value: 'confused', label: 'Confused', emoji: '🤔', category: 'neutral' },
+  { value: 'tired', label: 'Tired', emoji: '😴', category: 'neutral' },
+  { value: 'numb', label: 'Numb', emoji: '😑', category: 'neutral' },
+  { value: 'uncertain', label: 'Uncertain', emoji: '🤷', category: 'neutral' },
 ];
 
 export const ACTION_OPTIONS = [
