@@ -8,6 +8,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { EMOTION_OPTIONS } from "@/lib/constants";
 import type { MoodEntry, TriggerEvent, Thought, Medication } from "@shared/schema";
 
 // Helper function to get emoji for mood
