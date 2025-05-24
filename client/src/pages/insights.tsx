@@ -294,58 +294,111 @@ export default function Insights() {
   const exportTriggersPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(20);
-    doc.text('Trigger Events Report', 20, 30);
+    doc.text('🧠 Trigger Events Report', 20, 30);
     
     doc.setFontSize(12);
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 45);
-    doc.text(`Total Triggers: ${filteredTriggerEvents.length}`, 20, 55);
-
-    // Manual table creation since autoTable is not working
-    let yPosition = 70;
-    const lineHeight = 6;
+    doc.text(`📅 Generated: ${new Date().toLocaleDateString()}`, 20, 45);
+    doc.text(`📊 Total Triggers: ${filteredTriggerEvents.length}`, 20, 55);
     
-    // Header
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    doc.text('Date', 20, yPosition);
-    doc.text('Situation', 50, yPosition);
-    doc.text('Emotions', 110, yPosition);
-    doc.text('Action', 140, yPosition);
-    doc.text('Duration', 170, yPosition);
-    yPosition += lineHeight + 2;
+    let yPosition = 75;
+    const pageHeight = 280;
+    const leftMargin = 20;
+    const rightMargin = 180;
     
-    // Line under header
-    doc.line(20, yPosition, 190, yPosition);
-    yPosition += 4;
-    
-    // Data rows
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(8);
-    
-    filteredTriggerEvents.forEach(trigger => {
-      const date = new Date(trigger.createdAt || '').toLocaleDateString();
-      doc.text(date, 20, yPosition);
-      
-      // Wrap long text
-      const situation = trigger.eventSituation.substring(0, 25) + (trigger.eventSituation.length > 25 ? '...' : '');
-      const emotions = trigger.emotions.slice(0, 2).join(', ') + (trigger.emotions.length > 2 ? '...' : '');
-      const action = trigger.actionTaken.substring(0, 20) + (trigger.actionTaken.length > 20 ? '...' : '');
-      const duration = trigger.endDate 
-        ? `${Math.ceil((new Date(trigger.endDate).getTime() - new Date(trigger.startDate).getTime()) / (1000 * 60 * 60 * 24))}d`
-        : 'Ongoing';
-      
-      doc.text(situation, 50, yPosition);
-      doc.text(emotions, 110, yPosition);
-      doc.text(action, 140, yPosition);
-      doc.text(duration, 170, yPosition);
-      
-      yPosition += lineHeight;
-      
-      // Add new page if needed
-      if (yPosition > 280) {
+    filteredTriggerEvents.forEach((trigger, index) => {
+      // Check if we need a new page
+      if (yPosition > pageHeight - 60) {
         doc.addPage();
         yPosition = 20;
       }
+      
+      // Event Header with number and date
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text(`Event #${index + 1} - ${new Date(trigger.createdAt || '').toLocaleDateString()}`, leftMargin, yPosition);
+      yPosition += 8;
+      
+      // Draw separator line
+      doc.setLineWidth(0.5);
+      doc.line(leftMargin, yPosition, rightMargin, yPosition);
+      yPosition += 10;
+      
+      // Situation section
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'bold');
+      doc.text('📝 Situation:', leftMargin, yPosition);
+      yPosition += 6;
+      
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(10);
+      const situationLines = doc.splitTextToSize(trigger.eventSituation, rightMargin - leftMargin - 10);
+      doc.text(situationLines, leftMargin + 5, yPosition);
+      yPosition += situationLines.length * 5 + 8;
+      
+      // Emotions section with emojis
+      if (trigger.emotions.length > 0) {
+        doc.setFont(undefined, 'bold');
+        doc.setFontSize(11);
+        doc.text('😔 Emotions Experienced:', leftMargin, yPosition);
+        yPosition += 6;
+        
+        doc.setFont(undefined, 'normal');
+        doc.setFontSize(10);
+        const emotionsWithEmojis = trigger.emotions.map(emotion => {
+          const emotionData = EMOTION_OPTIONS.find(e => e.value === emotion);
+          return emotionData ? `${emotionData.emoji} ${emotionData.label}` : emotion;
+        }).join(', ');
+        
+        const emotionLines = doc.splitTextToSize(emotionsWithEmojis, rightMargin - leftMargin - 10);
+        doc.text(emotionLines, leftMargin + 5, yPosition);
+        yPosition += emotionLines.length * 5 + 8;
+      }
+      
+      // Action taken section
+      if (trigger.actionTaken) {
+        doc.setFont(undefined, 'bold');
+        doc.setFontSize(11);
+        doc.text('⚡ Action Taken:', leftMargin, yPosition);
+        yPosition += 6;
+        
+        doc.setFont(undefined, 'normal');
+        doc.setFontSize(10);
+        const actionLines = doc.splitTextToSize(trigger.actionTaken, rightMargin - leftMargin - 10);
+        doc.text(actionLines, leftMargin + 5, yPosition);
+        yPosition += actionLines.length * 5 + 8;
+      }
+      
+      // Consequences section
+      if (trigger.consequences.length > 0) {
+        doc.setFont(undefined, 'bold');
+        doc.setFontSize(11);
+        doc.text('📈 Consequences/Outcomes:', leftMargin, yPosition);
+        yPosition += 6;
+        
+        doc.setFont(undefined, 'normal');
+        doc.setFontSize(10);
+        trigger.consequences.forEach(consequence => {
+          if (consequence.trim()) {
+            const consequenceLines = doc.splitTextToSize(`• ${consequence}`, rightMargin - leftMargin - 10);
+            doc.text(consequenceLines, leftMargin + 5, yPosition);
+            yPosition += consequenceLines.length * 5 + 3;
+          }
+        });
+        yPosition += 5;
+      }
+      
+      // Duration
+      const duration = trigger.endDate 
+        ? `${Math.ceil((new Date(trigger.endDate).getTime() - new Date(trigger.startDate).getTime()) / (1000 * 60 * 60 * 24))} day(s)`
+        : 'Ongoing';
+      
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(11);
+      doc.text(`⏱️ Duration: ${duration}`, leftMargin, yPosition);
+      yPosition += 15;
+      
+      // Add extra space between events
+      yPosition += 10;
     });
 
     doc.save('trigger-events-report.pdf');
