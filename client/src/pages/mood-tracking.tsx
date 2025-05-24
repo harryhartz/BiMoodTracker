@@ -149,11 +149,11 @@ export default function MoodTracking() {
                   <FormItem>
                     <FormControl>
                       <RatingScale
-                        label="Overall Mood Intensity (-3 to +3)"
+                        label="Overall Mood Intensity (-2 to +2)"
                         value={field.value}
                         onChange={field.onChange}
-                        min={-3}
-                        max={3}
+                        min={-2}
+                        max={2}
                         color="primary"
                       />
                     </FormControl>

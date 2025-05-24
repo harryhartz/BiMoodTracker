@@ -735,7 +735,7 @@ export default function Insights() {
               <Brain className="h-5 w-5" />
               Mood Intensity Calendar - {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </CardTitle>
-            <p className="text-gray-400 text-sm">Daily average of morning + evening mood intensities (-3 to +3 scale)</p>
+            <p className="text-gray-400 text-sm">Daily average of morning + evening mood intensities (-2 to +2 scale)</p>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
