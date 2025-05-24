@@ -125,7 +125,7 @@ export default function TriggerTracking() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <div className="container mx-auto p-6 max-w-4xl">
         {/* Simple Header */}
         <div className="mb-8 text-center">
@@ -139,7 +139,7 @@ export default function TriggerTracking() {
 
         {/* Recording Form - Simple Design */}
         <div className="mb-12">
-          <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm">
+          <Card className="bg-gradient-to-br from-pink-100 to-rose-100 dark:from-slate-800 dark:to-slate-700 border-pink-200 dark:border-slate-600 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg text-slate-800 dark:text-slate-200">
                 <AlertTriangle className="h-5 w-5 text-slate-600 dark:text-slate-400" />
@@ -357,7 +357,7 @@ export default function TriggerTracking() {
 
         {/* Recent Events - Simple at Bottom */}
         <div>
-          <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm">
+          <Card className="bg-gradient-to-br from-orange-100 to-pink-100 dark:from-slate-800 dark:to-slate-700 border-orange-200 dark:border-slate-600 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg text-slate-800 dark:text-slate-200">
                 <Clock className="h-5 w-5 text-slate-600 dark:text-slate-400" />
@@ -375,7 +375,7 @@ export default function TriggerTracking() {
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {triggerEvents.slice(0, 6).map((event) => (
-                      <Card key={event.id} className="bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 hover:shadow-md transition-shadow">
+                      <Card key={event.id} className="bg-gradient-to-br from-rose-50 to-pink-50 dark:bg-slate-700/50 border-rose-200 dark:border-slate-600 hover:shadow-md transition-shadow">
                         <CardContent className="p-4">
                           <div className="space-y-3">
                             <div className="flex justify-between items-start">
