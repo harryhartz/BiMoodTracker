@@ -125,23 +125,23 @@ export default function TriggerTracking() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <div className="container mx-auto p-6 max-w-5xl">
         {/* Header with calm colors */}
         <div className="mb-12 text-center">
-          <h1 className="text-4xl font-bold mb-3 text-slate-700 dark:text-slate-200">
+          <h1 className="text-4xl font-bold mb-3 text-slate-200">
             Trigger Event Tracking
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">
+          <p className="text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">
             Understand your emotional patterns by tracking situations that trigger responses and how you handle them
           </p>
         </div>
 
         {/* Recording Form - Enhanced Design */}
         <div className="mb-16">
-          <Card className="bg-white/90 dark:bg-slate-800/90 border-slate-200 dark:border-slate-600/50 shadow-lg backdrop-blur-sm">
+          <Card className="bg-slate-800/90 border-slate-600/50 shadow-lg backdrop-blur-sm">
             <CardHeader className="pb-6">
-              <CardTitle className="text-xl text-slate-700 dark:text-slate-100">
+              <CardTitle className="text-xl text-slate-100">
                 Record Trigger Event
               </CardTitle>
             </CardHeader>
@@ -399,9 +399,9 @@ export default function TriggerTracking() {
 
         {/* Recent Events - Enhanced at Bottom */}
         <div>
-          <Card className="bg-white/90 dark:bg-slate-800/50 border-slate-200 dark:border-slate-600/30 shadow-lg backdrop-blur-sm">
+          <Card className="bg-slate-800/50 border-slate-600/30 shadow-lg backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="text-xl text-slate-700 dark:text-slate-100">
+              <CardTitle className="text-xl text-slate-100">
                 Recent Trigger Events
               </CardTitle>
             </CardHeader>
