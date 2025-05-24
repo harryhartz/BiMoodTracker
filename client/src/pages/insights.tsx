@@ -113,27 +113,22 @@ export default function Insights() {
       }, [] as any[]);
   }, [filteredMoodEntries]);
 
-  // Process emoji mood data for the mood chart
-  const emojiMoodData = useMemo(() => {
-    return filteredMoodEntries
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .reduce((acc, entry) => {
-        const date = entry.date;
-        const existingDay = acc.find(d => d.date === date);
-        if (existingDay) {
-          if (entry.timeOfDay === 'morning') existingDay.morningMood = entry.mood;
-          if (entry.timeOfDay === 'evening') existingDay.eveningMood = entry.mood;
-        } else {
-          const newDay: any = {
-            date,
-            displayDate: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-          };
-          if (entry.timeOfDay === 'morning') newDay.morningMood = entry.mood;
-          if (entry.timeOfDay === 'evening') newDay.eveningMood = entry.mood;
-          acc.push(newDay);
-        }
-        return acc;
-      }, [] as any[]);
+  // Process emoji mood frequency data for beautiful display
+  const moodFrequencyData = useMemo(() => {
+    const moodCounts: Record<string, number> = {};
+    
+    filteredMoodEntries.forEach(entry => {
+      moodCounts[entry.mood] = (moodCounts[entry.mood] || 0) + 1;
+    });
+    
+    return Object.entries(moodCounts)
+      .map(([mood, count]) => ({
+        mood,
+        count,
+        emoji: getMoodEmoji(mood),
+        percentage: Math.round((count / filteredMoodEntries.length) * 100)
+      }))
+      .sort((a, b) => b.count - a.count);
   }, [filteredMoodEntries]);
 
   // Calculate medication statistics from mood entries
@@ -262,21 +257,50 @@ export default function Insights() {
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 45);
     doc.text(`Total Triggers: ${filteredTriggerEvents.length}`, 20, 55);
 
-    const tableData = filteredTriggerEvents.map(trigger => [
-      new Date(trigger.createdAt || '').toLocaleDateString(),
-      trigger.eventSituation || 'N/A',
-      trigger.emotion || 'N/A',
-      trigger.actionTaken || 'N/A',
-      trigger.consequence || 'N/A'
-    ]);
-
-    (doc as any).autoTable({
-      head: [['Date', 'Situation', 'Emotion', 'Action Taken', 'Consequence']],
-      body: tableData,
-      startY: 70,
-      theme: 'grid',
-      headStyles: { fillColor: [51, 51, 51] },
-      styles: { fontSize: 8 }
+    // Manual table creation since autoTable is not working
+    let yPosition = 70;
+    const lineHeight = 6;
+    
+    // Header
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.text('Date', 20, yPosition);
+    doc.text('Situation', 50, yPosition);
+    doc.text('Emotion', 110, yPosition);
+    doc.text('Action', 140, yPosition);
+    doc.text('Result', 170, yPosition);
+    yPosition += lineHeight + 2;
+    
+    // Line under header
+    doc.line(20, yPosition, 190, yPosition);
+    yPosition += 4;
+    
+    // Data rows
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(8);
+    
+    filteredTriggerEvents.forEach(trigger => {
+      const date = new Date(trigger.createdAt || '').toLocaleDateString();
+      doc.text(date, 20, yPosition);
+      
+      // Wrap long text
+      const situation = trigger.eventSituation.substring(0, 25) + (trigger.eventSituation.length > 25 ? '...' : '');
+      const emotion = trigger.emotion.substring(0, 15);
+      const action = trigger.actionTaken.substring(0, 20) + (trigger.actionTaken.length > 20 ? '...' : '');
+      const result = trigger.consequence.substring(0, 15) + (trigger.consequence.length > 15 ? '...' : '');
+      
+      doc.text(situation, 50, yPosition);
+      doc.text(emotion, 110, yPosition);
+      doc.text(action, 140, yPosition);
+      doc.text(result, 170, yPosition);
+      
+      yPosition += lineHeight;
+      
+      // Add new page if needed
+      if (yPosition > 280) {
+        doc.addPage();
+        yPosition = 20;
+      }
     });
 
     doc.save('trigger-events-report.pdf');
@@ -361,10 +385,12 @@ export default function Insights() {
                       dataKey="displayDate" 
                       stroke="#9CA3AF"
                       tick={{ fill: '#9CA3AF' }}
+                      label={{ value: 'Date', position: 'insideBottom', offset: -5, style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
                     />
                     <YAxis 
                       stroke="#9CA3AF"
                       tick={{ fill: '#9CA3AF' }}
+                      label={{ value: 'Weight (kg)', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
                     />
                     <Tooltip 
                       contentStyle={{ 
@@ -390,32 +416,62 @@ export default function Insights() {
           </Card>
         )}
 
-        {/* Emoji Mood Chart */}
+        {/* Mood Frequency Visualization */}
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
               <Brain className="h-5 w-5" />
-              Daily Mood Types
+              Mood Frequency Analysis
             </CardTitle>
+            <p className="text-gray-400 text-sm">Size represents frequency - larger emojis appear more often</p>
           </CardHeader>
           <CardContent>
-            {emojiMoodData.length > 0 ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-2">
-                  {emojiMoodData.map((day, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
-                      <span className="text-sm text-gray-300">{day.displayDate}</span>
-                      <div className="flex gap-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-green-400">Morning:</span>
-                          <span className="text-lg">{getMoodEmoji(day.morningMood || '')}</span>
-                          <span className="text-xs text-gray-400 capitalize">{day.morningMood || 'N/A'}</span>
+            {moodFrequencyData.length > 0 ? (
+              <div className="space-y-6">
+                {/* Modern emoji bubble visualization */}
+                <div className="flex flex-wrap items-center justify-center gap-4 p-6 bg-gray-700 rounded-lg">
+                  {moodFrequencyData.map((moodData, index) => {
+                    const size = Math.max(2, Math.min(6, moodData.count / 2)); // Dynamic size based on frequency
+                    return (
+                      <div key={index} className="flex flex-col items-center space-y-2 group">
+                        <div 
+                          className="flex items-center justify-center rounded-full bg-gray-600 hover:bg-gray-500 transition-all duration-300 shadow-lg hover:shadow-xl"
+                          style={{
+                            width: `${size * 16}px`,
+                            height: `${size * 16}px`,
+                            fontSize: `${size * 8}px`
+                          }}
+                        >
+                          {moodData.emoji}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-blue-400">Evening:</span>
-                          <span className="text-lg">{getMoodEmoji(day.eveningMood || '')}</span>
-                          <span className="text-xs text-gray-400 capitalize">{day.eveningMood || 'N/A'}</span>
+                        <div className="text-center">
+                          <div className="text-xs text-gray-300 capitalize font-medium">{moodData.mood}</div>
+                          <div className="text-xs text-gray-400">{moodData.count}x ({moodData.percentage}%)</div>
                         </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Detailed breakdown */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {moodFrequencyData.map((moodData, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-2xl">{moodData.emoji}</span>
+                        <div>
+                          <div className="text-sm font-medium text-white capitalize">{moodData.mood}</div>
+                          <div className="text-xs text-gray-400">{moodData.count} entries</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-20 h-2 bg-gray-600 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500"
+                            style={{ width: `${moodData.percentage}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium text-gray-300">{moodData.percentage}%</span>
                       </div>
                     </div>
                   ))}
@@ -448,14 +504,14 @@ export default function Insights() {
                       dataKey="sleepQuality" 
                       stroke="#9CA3AF"
                       tick={{ fill: '#9CA3AF' }}
-                      label={{ value: 'Sleep Quality (1-5)', position: 'insideBottom', offset: -10, style: { fill: '#9CA3AF' } }}
+                      label={{ value: 'Sleep Quality (1-5)', position: 'insideBottom', offset: -5, style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
                       domain={[1, 5]}
                     />
                     <YAxis 
                       dataKey="nextDayMood"
                       stroke="#9CA3AF"
                       tick={{ fill: '#9CA3AF' }}
-                      label={{ value: 'Next Day Mood Intensity', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF' } }}
+                      label={{ value: 'Next Day Mood (-3 to +3)', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
                       domain={[-3, 3]}
                     />
                     <Tooltip 
@@ -595,11 +651,13 @@ export default function Insights() {
                       dataKey="displayDate" 
                       stroke="#9CA3AF"
                       tick={{ fill: '#9CA3AF' }}
+                      label={{ value: 'Date', position: 'insideBottom', offset: -5, style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
                     />
                     <YAxis 
                       domain={[-3, 3]}
                       stroke="#9CA3AF"
                       tick={{ fill: '#9CA3AF' }}
+                      label={{ value: 'Mood Intensity (-3 to +3)', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
                     />
                     <Tooltip 
                       contentStyle={{ 
