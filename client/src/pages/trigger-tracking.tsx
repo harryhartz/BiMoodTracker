@@ -270,7 +270,7 @@ export default function TriggerTracking() {
                           <FormControl>
                             <Textarea
                               placeholder="Describe your response in your own words..."
-                              value={field.value && !ACTION_OPTIONS.some(action => action.toLowerCase().replace(' ', '_') === field.value) ? field.value : ''}
+                              value={field.value || ''}
                               onChange={(e) => field.onChange(e.target.value)}
                               className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
                               rows={3}
