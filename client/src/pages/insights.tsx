@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Activity, Brain, Weight, Download, FileText, Camera, Pill } from "lucide-react";
+import { TrendingUp, Activity, Brain, Weight, Download, FileText, Camera, Pill, Sun, Moon } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, ScatterChart, Scatter } from "recharts";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -113,11 +113,34 @@ export default function Insights() {
       }, [] as any[]);
   }, [filteredMoodEntries]);
 
-  // Process emoji mood frequency data for beautiful display
-  const moodFrequencyData = useMemo(() => {
+  // Get mood colors based on emotional category
+  const getMoodColor = (mood: string): string => {
+    const positiveColors = ['#10B981', '#34D399', '#6EE7B7']; // greens
+    const negativeColors = ['#EF4444', '#F87171', '#FCA5A5']; // reds
+    const neutralColors = ['#F59E0B', '#FBBF24', '#FCD34D']; // yellows
+    const calmColors = ['#3B82F6', '#60A5FA', '#93C5FD']; // blues
+    
+    const positiveMoods = ['happy', 'excited', 'content', 'grateful', 'hopeful', 'peaceful'];
+    const negativeMoods = ['sad', 'anxious', 'angry', 'frustrated', 'stressed', 'overwhelmed', 'lonely'];
+    const neutralMoods = ['tired', 'calm'];
+    
+    if (positiveMoods.includes(mood.toLowerCase())) {
+      return positiveColors[Math.floor(Math.random() * positiveColors.length)];
+    } else if (negativeMoods.includes(mood.toLowerCase())) {
+      return negativeColors[Math.floor(Math.random() * negativeColors.length)];
+    } else if (neutralMoods.includes(mood.toLowerCase())) {
+      return neutralColors[Math.floor(Math.random() * neutralColors.length)];
+    } else {
+      return calmColors[Math.floor(Math.random() * calmColors.length)];
+    }
+  };
+
+  // Process mood frequency data separately for morning and evening
+  const morningMoodData = useMemo(() => {
+    const morningEntries = filteredMoodEntries.filter(entry => entry.timeOfDay === 'morning');
     const moodCounts: Record<string, number> = {};
     
-    filteredMoodEntries.forEach(entry => {
+    morningEntries.forEach(entry => {
       moodCounts[entry.mood] = (moodCounts[entry.mood] || 0) + 1;
     });
     
@@ -126,10 +149,30 @@ export default function Insights() {
         mood,
         count,
         emoji: getMoodEmoji(mood),
-        percentage: Math.round((count / filteredMoodEntries.length) * 100)
+        percentage: Math.round((count / morningEntries.length) * 100),
+        color: getMoodColor(mood)
       }))
       .sort((a, b) => b.count - a.count);
-  }, [filteredMoodEntries]);
+  }, [filteredMoodEntries, getMoodColor]);
+
+  const eveningMoodData = useMemo(() => {
+    const eveningEntries = filteredMoodEntries.filter(entry => entry.timeOfDay === 'evening');
+    const moodCounts: Record<string, number> = {};
+    
+    eveningEntries.forEach(entry => {
+      moodCounts[entry.mood] = (moodCounts[entry.mood] || 0) + 1;
+    });
+    
+    return Object.entries(moodCounts)
+      .map(([mood, count]) => ({
+        mood,
+        count,
+        emoji: getMoodEmoji(mood),
+        percentage: Math.round((count / eveningEntries.length) * 100),
+        color: getMoodColor(mood)
+      }))
+      .sort((a, b) => b.count - a.count);
+  }, [filteredMoodEntries, getMoodColor]);
 
   // Calculate medication statistics from mood entries
   const medicationStats = useMemo(() => {
@@ -416,74 +459,144 @@ export default function Insights() {
           </Card>
         )}
 
-        {/* Mood Frequency Visualization */}
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Brain className="h-5 w-5" />
-              Mood Frequency Analysis
-            </CardTitle>
-            <p className="text-gray-400 text-sm">Size represents frequency - larger emojis appear more often</p>
-          </CardHeader>
-          <CardContent>
-            {moodFrequencyData.length > 0 ? (
-              <div className="space-y-6">
-                {/* Modern emoji bubble visualization */}
-                <div className="flex flex-wrap items-center justify-center gap-4 p-6 bg-gray-700 rounded-lg">
-                  {moodFrequencyData.map((moodData, index) => {
-                    const size = Math.max(2, Math.min(6, moodData.count / 2)); // Dynamic size based on frequency
+        {/* Morning & Evening Mood Bubble Pack Visualizations */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Morning Moods Bubble Pack */}
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Sun className="h-5 w-5 text-yellow-400" />
+                Morning Mood Patterns
+              </CardTitle>
+              <p className="text-gray-400 text-sm">Bubble size represents frequency</p>
+            </CardHeader>
+            <CardContent>
+              {morningMoodData.length > 0 ? (
+                <div className="relative w-full h-80 bg-gray-700 rounded-lg overflow-hidden">
+                  {morningMoodData.map((moodData, index) => {
+                    const maxSize = 120;
+                    const minSize = 40;
+                    const maxCount = Math.max(...morningMoodData.map(m => m.count));
+                    const size = minSize + (moodData.count / maxCount) * (maxSize - minSize);
+                    
+                    // Calculate position to create organic bubble layout
+                    const positions = [
+                      { x: 20, y: 20 }, { x: 60, y: 40 }, { x: 30, y: 60 },
+                      { x: 70, y: 25 }, { x: 45, y: 75 }, { x: 15, y: 80 },
+                      { x: 80, y: 60 }, { x: 25, y: 35 }
+                    ];
+                    const position = positions[index % positions.length];
+                    
                     return (
-                      <div key={index} className="flex flex-col items-center space-y-2 group">
-                        <div 
-                          className="flex items-center justify-center rounded-full bg-gray-600 hover:bg-gray-500 transition-all duration-300 shadow-lg hover:shadow-xl"
+                      <div
+                        key={index}
+                        className="absolute group cursor-pointer transform transition-all duration-300 hover:scale-110"
+                        style={{
+                          left: `${position.x}%`,
+                          top: `${position.y}%`,
+                          width: `${size}px`,
+                          height: `${size}px`,
+                          transform: `translate(-50%, -50%)`,
+                        }}
+                      >
+                        <div
+                          className="w-full h-full rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300"
                           style={{
-                            width: `${size * 16}px`,
-                            height: `${size * 16}px`,
-                            fontSize: `${size * 8}px`
+                            backgroundColor: moodData.color,
+                            fontSize: `${size * 0.3}px`,
                           }}
                         >
                           {moodData.emoji}
                         </div>
-                        <div className="text-center">
-                          <div className="text-xs text-gray-300 capitalize font-medium">{moodData.mood}</div>
-                          <div className="text-xs text-gray-400">{moodData.count}x ({moodData.percentage}%)</div>
+                        <div className="absolute inset-0 rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white text-center">
+                            <div className="text-xs font-medium capitalize">{moodData.mood}</div>
+                            <div className="text-xs">{moodData.count}x ({moodData.percentage}%)</div>
+                          </div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-                
-                {/* Detailed breakdown */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {moodFrequencyData.map((moodData, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
-                      <div className="flex items-center space-x-3">
-                        <span className="text-2xl">{moodData.emoji}</span>
-                        <div>
-                          <div className="text-sm font-medium text-white capitalize">{moodData.mood}</div>
-                          <div className="text-xs text-gray-400">{moodData.count} entries</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-20 h-2 bg-gray-600 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500"
-                            style={{ width: `${moodData.percentage}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium text-gray-300">{moodData.percentage}%</span>
-                      </div>
-                    </div>
-                  ))}
+              ) : (
+                <div className="h-80 flex items-center justify-center bg-gray-700 rounded-lg">
+                  <div className="text-center text-gray-400">
+                    <Sun className="h-8 w-8 mx-auto mb-2" />
+                    <p>No morning mood data</p>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="h-40 flex items-center justify-center bg-gray-700 rounded-lg">
-                <p className="text-gray-400">No mood data available</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Evening Moods Bubble Pack */}
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Moon className="h-5 w-5 text-blue-400" />
+                Evening Mood Patterns
+              </CardTitle>
+              <p className="text-gray-400 text-sm">Bubble size represents frequency</p>
+            </CardHeader>
+            <CardContent>
+              {eveningMoodData.length > 0 ? (
+                <div className="relative w-full h-80 bg-gray-700 rounded-lg overflow-hidden">
+                  {eveningMoodData.map((moodData, index) => {
+                    const maxSize = 120;
+                    const minSize = 40;
+                    const maxCount = Math.max(...eveningMoodData.map(m => m.count));
+                    const size = minSize + (moodData.count / maxCount) * (maxSize - minSize);
+                    
+                    // Different positions for evening to create variety
+                    const positions = [
+                      { x: 30, y: 25 }, { x: 70, y: 35 }, { x: 20, y: 65 },
+                      { x: 80, y: 20 }, { x: 50, y: 70 }, { x: 25, y: 85 },
+                      { x: 75, y: 75 }, { x: 40, y: 40 }
+                    ];
+                    const position = positions[index % positions.length];
+                    
+                    return (
+                      <div
+                        key={index}
+                        className="absolute group cursor-pointer transform transition-all duration-300 hover:scale-110"
+                        style={{
+                          left: `${position.x}%`,
+                          top: `${position.y}%`,
+                          width: `${size}px`,
+                          height: `${size}px`,
+                          transform: `translate(-50%, -50%)`,
+                        }}
+                      >
+                        <div
+                          className="w-full h-full rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300"
+                          style={{
+                            backgroundColor: moodData.color,
+                            fontSize: `${size * 0.3}px`,
+                          }}
+                        >
+                          {moodData.emoji}
+                        </div>
+                        <div className="absolute inset-0 rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white text-center">
+                            <div className="text-xs font-medium capitalize">{moodData.mood}</div>
+                            <div className="text-xs">{moodData.count}x ({moodData.percentage}%)</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="h-80 flex items-center justify-center bg-gray-700 rounded-lg">
+                  <div className="text-center text-gray-400">
+                    <Moon className="h-8 w-8 mx-auto mb-2" />
+                    <p>No evening mood data</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Sleep-Mood Correlation Scatter Plot */}
         {sleepMoodData.length > 0 && (
