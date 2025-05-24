@@ -357,112 +357,168 @@ export default function Insights() {
       doc.text(`Page ${pageNum}`, 170, 285);
     };
     
-    // Process each trigger event
+    // Process each trigger event with vertical block layout
     filteredTriggerEvents.forEach((trigger, index) => {
       // Check if we need a new page
-      if (yPosition > pageHeight - 60) {
+      if (yPosition > pageHeight - 100) {
         doc.addPage();
         applyFooter(doc.getNumberOfPages());
         yPosition = 20;
       }
       
-      // Event header
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(0.5);
-      doc.rect(leftMargin - 5, yPosition - 3, textWidth + 10, 12, 'S');
-      
-      // Event title
-      doc.setFontSize(12);
+      // Header: Date + Trigger Severity (colored tag)
+      const eventDate = trigger.createdAt ? new Date(trigger.createdAt).toLocaleDateString() : 'No date';
+      doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(0, 0, 0);
-      doc.text(`Event ${index + 1}`, leftMargin, yPosition + 4);
+      doc.text(eventDate, leftMargin, yPosition);
       
-      // Event date
-      const eventDate = trigger.createdAt ? new Date(trigger.createdAt).toLocaleDateString() : 'No date';
-      doc.setFontSize(9);
-      doc.text(eventDate, rightMargin - 20, yPosition + 4, { align: 'right' });
-      yPosition += 18;
+      // Severity tag (light gray background with black text)
+      const severity = trigger.emotions.length > 3 ? 'High' : trigger.emotions.length > 1 ? 'Medium' : 'Low';
+      doc.setFillColor(240, 240, 240); // Light gray
+      doc.setDrawColor(0, 0, 0);
+      doc.roundedRect(leftMargin + 50, yPosition - 4, 25, 8, 2, 2, 'FD');
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(severity, leftMargin + 62.5, yPosition, { align: 'center' });
+      yPosition += 15;
       
-      // Situation
+      // What happened? → In a light grey speech bubble box
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(0, 0, 0);
-      doc.text('Situation:', leftMargin, yPosition);
+      doc.text('What happened?', leftMargin, yPosition);
       yPosition += 8;
       
-      // Situation content
-      const situationLines = doc.splitTextToSize(trigger.eventSituation, textWidth - 10);
+      // Speech bubble background (light gray)
+      const situationLines = doc.splitTextToSize(trigger.eventSituation, textWidth - 15);
+      const situationHeight = situationLines.length * 4 + 8;
+      doc.setFillColor(245, 245, 245); // Light gray
+      doc.setDrawColor(200, 200, 200); // Gray border
+      doc.roundedRect(leftMargin, yPosition - 4, textWidth, situationHeight, 3, 3, 'FD');
+      
+      // Situation text
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
-      doc.text(situationLines, leftMargin + 3, yPosition);
-      yPosition += situationLines.length * 4 + 6;
+      doc.setTextColor(0, 0, 0);
+      doc.text(situationLines, leftMargin + 5, yPosition + 2);
+      yPosition += situationHeight + 8;
       
-      // Emotions
+      // Emotions → Display as pill-shaped color tags
       if (trigger.emotions.length > 0) {
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.text('Emotions:', leftMargin, yPosition);
-        yPosition += 8;
+        doc.text('Emotions', leftMargin, yPosition);
+        yPosition += 10;
         
-        const emotions = trigger.emotions.join(', ');
-        const emotionLines = doc.splitTextToSize(emotions, textWidth - 10);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.text(emotionLines, leftMargin + 3, yPosition);
-        yPosition += emotionLines.length * 4 + 6;
+        let emotionX = leftMargin;
+        let currentRowY = yPosition;
+        
+        trigger.emotions.forEach((emotion, i) => {
+          const emotionData = EMOTION_OPTIONS.find(e => e.value === emotion);
+          const emotionLabel = emotionData ? emotionData.label : emotion;
+          
+          // Calculate pill width
+          const pillWidth = Math.max(emotionLabel.length * 1.5 + 8, 20);
+          
+          // Check if we need a new row
+          if (emotionX + pillWidth > rightMargin) {
+            emotionX = leftMargin;
+            currentRowY += 12;
+          }
+          
+          // Draw pill-shaped emotion tag with subtle color
+          const colors = [
+            [200, 220, 255], // Light blue
+            [220, 255, 200], // Light green  
+            [255, 220, 200], // Light orange
+            [255, 200, 220], // Light pink
+            [220, 200, 255]  // Light purple
+          ];
+          const colorIndex = i % colors.length;
+          doc.setFillColor(...colors[colorIndex]);
+          doc.setDrawColor(150, 150, 150);
+          doc.roundedRect(emotionX, currentRowY - 4, pillWidth, 8, 4, 4, 'FD');
+          
+          // Emotion text
+          doc.setFontSize(7);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(0, 0, 0);
+          doc.text(emotionLabel, emotionX + pillWidth/2, currentRowY, { align: 'center' });
+          
+          emotionX += pillWidth + 5;
+        });
+        
+        yPosition = currentRowY + 15;
       }
       
-      // Action taken
+      // Actions → Bulleted list inside light yellow box
       if (trigger.actionTaken) {
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.text('Action Taken:', leftMargin, yPosition);
+        doc.text('Actions', leftMargin, yPosition);
         yPosition += 8;
         
-        const actionLines = doc.splitTextToSize(trigger.actionTaken, textWidth - 10);
+        // Light yellow box background
+        const actionLines = doc.splitTextToSize(trigger.actionTaken, textWidth - 15);
+        const actionHeight = actionLines.length * 4 + 8;
+        doc.setFillColor(255, 255, 220); // Light yellow
+        doc.setDrawColor(200, 200, 150); // Yellow-ish border
+        doc.roundedRect(leftMargin, yPosition - 4, textWidth, actionHeight, 3, 3, 'FD');
+        
+        // Action text with bullet
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
-        doc.text(actionLines, leftMargin + 3, yPosition);
-        yPosition += actionLines.length * 4 + 6;
+        doc.setTextColor(0, 0, 0);
+        doc.text(`• ${actionLines.join(' ')}`, leftMargin + 5, yPosition + 2);
+        yPosition += actionHeight + 8;
       }
       
-      // Consequences
+      // Consequences → Red border or faded red box
       if (trigger.consequences.length > 0 && trigger.consequences.some(c => c.trim())) {
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
-        doc.text('Consequences:', leftMargin, yPosition);
+        doc.text('Consequences', leftMargin, yPosition);
         yPosition += 8;
         
         const consequenceItems = trigger.consequences.filter(c => c.trim());
-        consequenceItems.forEach((consequence) => {
-          const consequenceLines = doc.splitTextToSize(`• ${consequence}`, textWidth - 10);
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(9);
-          doc.text(consequenceLines, leftMargin + 3, yPosition);
-          yPosition += consequenceLines.length * 4 + 3;
+        let totalHeight = 0;
+        
+        // Calculate total height needed
+        consequenceItems.forEach(consequence => {
+          const lines = doc.splitTextToSize(`• ${consequence}`, textWidth - 15);
+          totalHeight += lines.length * 4 + 2;
         });
-        yPosition += 3;
+        totalHeight += 6;
+        
+        // Faded red box
+        doc.setFillColor(255, 240, 240); // Light red/pink
+        doc.setDrawColor(255, 100, 100); // Red border
+        doc.setLineWidth(1);
+        doc.roundedRect(leftMargin, yPosition - 4, textWidth, totalHeight, 3, 3, 'FD');
+        
+        // Consequence items
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(0, 0, 0);
+        
+        consequenceItems.forEach((consequence) => {
+          const consequenceLines = doc.splitTextToSize(`• ${consequence}`, textWidth - 15);
+          doc.text(consequenceLines, leftMargin + 5, yPosition + 2);
+          yPosition += consequenceLines.length * 4 + 2;
+        });
+        
+        yPosition += 10;
       }
       
-      // Duration
-      const duration = trigger.endDate 
-        ? Math.ceil((new Date(trigger.endDate).getTime() - new Date(trigger.startDate).getTime()) / (1000 * 60 * 60 * 24))
-        : null;
-      
-      const durationText = duration ? `Duration: ${duration} days` : 'Duration: Ongoing';
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.text(durationText, leftMargin, yPosition);
-      
       // Add spacing before next event
-      yPosition += 15;
-      
-      // Add a divider line
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(0.2);
-      doc.line(leftMargin, yPosition - 5, rightMargin, yPosition - 5);
-      
       yPosition += 10;
+      
+      // Event divider line
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.5);
+      doc.line(leftMargin, yPosition, rightMargin, yPosition);
+      yPosition += 15;
     });
 
     // Apply footer to all pages
