@@ -509,26 +509,26 @@ export default function Insights() {
       
       doc.setFont('times', 'normal');
       doc.setFontSize(10);
-      doc.setTextColor(15, 23, 42);
+      doc.setTextColor(0, 0, 0); // Black text
       doc.text(situationLines, leftMargin + 12, cardY + 2);
       cardY += situationHeight + 8;
       
-      // Emotions with perfectly centered pill design
+      // Emotions with professional grey design
       if (trigger.emotions.length > 0) {
         doc.setFontSize(11);
         doc.setFont('times', 'bold');
-        doc.setTextColor(139, 92, 246);
+        doc.setTextColor(0, 0, 0); // Black text
         doc.text('EMOTIONS', leftMargin + 8, cardY);
         cardY += 10;
         
         let emotionX = leftMargin + 8;
         const emotionColors = [
-          [59, 130, 246],   // Blue
-          [16, 185, 129],   // Emerald
-          [245, 101, 101],  // Red
-          [251, 191, 36],   // Amber
-          [139, 92, 246],   // Violet
-          [236, 72, 153]    // Pink
+          [128, 128, 128], // Grey
+          [100, 100, 100], // Darker grey
+          [160, 160, 160], // Lighter grey
+          [80, 80, 80],    // Dark grey
+          [180, 180, 180], // Light grey
+          [60, 60, 60]     // Very dark grey
         ];
         
         trigger.emotions.forEach((emotion, i) => {
@@ -563,12 +563,12 @@ export default function Insights() {
       if (trigger.actionTaken) {
         doc.setFontSize(11);
         doc.setFont('times', 'bold');
-        doc.setTextColor(34, 197, 94);
+        doc.setTextColor(0, 0, 0); // Black text
         doc.text('ACTIONS TAKEN', leftMargin + 8, cardY);
         cardY += 10;
         
         // Action item with checkbox
-        doc.setFillColor(34, 197, 94);
+        doc.setFillColor(128, 128, 128); // Grey checkbox
         doc.roundedRect(leftMargin + 8, cardY - 4, 7, 7, 1, 1, 'F');
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(7);
@@ -577,7 +577,7 @@ export default function Insights() {
         const actionLines = doc.splitTextToSize(trigger.actionTaken, textWidth - 30);
         doc.setFont('times', 'normal');
         doc.setFontSize(10);
-        doc.setTextColor(15, 23, 42);
+        doc.setTextColor(0, 0, 0); // Black text
         doc.text(actionLines, leftMargin + 20, cardY);
         cardY += Math.max(actionLines.length * 4.5, 10) + 8;
       }
@@ -586,14 +586,14 @@ export default function Insights() {
       if (trigger.consequences.length > 0 && trigger.consequences.some(c => c.trim())) {
         doc.setFontSize(11);
         doc.setFont('times', 'bold');
-        doc.setTextColor(239, 68, 68);
+        doc.setTextColor(0, 0, 0); // Black text
         doc.text('CONSEQUENCES', leftMargin + 8, cardY);
         cardY += 10;
         
         const consequenceItems = trigger.consequences.filter(c => c.trim());
         consequenceItems.forEach((consequence) => {
           // Warning icon
-          doc.setFillColor(239, 68, 68);
+          doc.setFillColor(128, 128, 128); // Grey icon
           doc.circle(leftMargin + 11, cardY - 1, 2.5, 'F');
           doc.setTextColor(255, 255, 255);
           doc.setFontSize(6);
@@ -602,7 +602,7 @@ export default function Insights() {
           const consequenceLines = doc.splitTextToSize(consequence, textWidth - 30);
           doc.setFont('times', 'normal');
           doc.setFontSize(10);
-          doc.setTextColor(15, 23, 42);
+          doc.setTextColor(0, 0, 0); // Black text
           doc.text(consequenceLines, leftMargin + 20, cardY);
           cardY += consequenceLines.length * 4.5 + 6;
         });
