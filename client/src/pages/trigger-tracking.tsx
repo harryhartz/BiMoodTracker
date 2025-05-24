@@ -154,13 +154,13 @@ export default function TriggerTracking() {
                     name="eventSituation"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-slate-200 text-lg">What happened?</FormLabel>
+                        <FormLabel className="text-slate-700 dark:text-slate-200 text-lg">What happened?</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
                             placeholder="Describe the situation that triggered your emotional response..."
                             rows={4}
-                            className="bg-slate-700/50 border-slate-600 text-slate-200 placeholder:text-slate-400 min-h-[100px] focus:border-orange-500 transition-colors"
+                            className="bg-slate-50 dark:bg-slate-700/50 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 placeholder:text-slate-500 dark:placeholder:text-slate-400 min-h-[100px] focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
                           />
                         </FormControl>
                         <FormMessage />
@@ -207,11 +207,11 @@ export default function TriggerTracking() {
 
                   {/* Emotions */}
                   <div className="space-y-6">
-                    <FormLabel className="text-slate-200 text-lg">Emotions Experienced</FormLabel>
+                    <FormLabel className="text-slate-700 dark:text-slate-200 text-lg">Emotions Experienced</FormLabel>
                     
                     {/* Negative Emotions */}
-                    <div className="p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-                      <h4 className="text-sm font-medium text-red-400 mb-3">Challenging Emotions</h4>
+                    <div className="p-4 bg-slate-100 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-slate-700/50">
+                      <h4 className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-3">Challenging Emotions</h4>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {getEmotionsByCategory('negative').map((emotion) => (
                           <div key={emotion.value} className="flex items-center space-x-2">
@@ -219,9 +219,9 @@ export default function TriggerTracking() {
                               id={emotion.value}
                               checked={selectedEmotions.includes(emotion.value)}
                               onCheckedChange={() => handleEmotionToggle(emotion.value)}
-                              className="border-red-400 data-[state=checked]:bg-red-500"
+                              className="border-slate-400 dark:border-slate-500 data-[state=checked]:bg-blue-400 dark:data-[state=checked]:bg-blue-500"
                             />
-                            <label htmlFor={emotion.value} className="text-sm text-slate-300 cursor-pointer">
+                            <label htmlFor={emotion.value} className="text-sm text-slate-600 dark:text-slate-300 cursor-pointer">
                               {emotion.emoji} {emotion.label}
                             </label>
                           </div>
@@ -230,8 +230,8 @@ export default function TriggerTracking() {
                     </div>
 
                     {/* Positive Emotions */}
-                    <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
-                      <h4 className="text-sm font-medium text-green-400 mb-3">Positive Emotions</h4>
+                    <div className="p-4 bg-slate-100 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-slate-700/50">
+                      <h4 className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-3">Positive Emotions</h4>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {getEmotionsByCategory('positive').map((emotion) => (
                           <div key={emotion.value} className="flex items-center space-x-2">
@@ -239,9 +239,9 @@ export default function TriggerTracking() {
                               id={emotion.value}
                               checked={selectedEmotions.includes(emotion.value)}
                               onCheckedChange={() => handleEmotionToggle(emotion.value)}
-                              className="border-green-400 data-[state=checked]:bg-green-500"
+                              className="border-slate-400 dark:border-slate-500 data-[state=checked]:bg-blue-400 dark:data-[state=checked]:bg-blue-500"
                             />
-                            <label htmlFor={emotion.value} className="text-sm text-slate-300 cursor-pointer">
+                            <label htmlFor={emotion.value} className="text-sm text-slate-600 dark:text-slate-300 cursor-pointer">
                               {emotion.emoji} {emotion.label}
                             </label>
                           </div>
@@ -250,8 +250,8 @@ export default function TriggerTracking() {
                     </div>
 
                     {/* Neutral Emotions */}
-                    <div className="p-4 bg-slate-500/10 rounded-xl border border-slate-500/20">
-                      <h4 className="text-sm font-medium text-slate-400 mb-3">Neutral Emotions</h4>
+                    <div className="p-4 bg-slate-100 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-slate-700/50">
+                      <h4 className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-3">Neutral Emotions</h4>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {getEmotionsByCategory('neutral').map((emotion) => (
                           <div key={emotion.value} className="flex items-center space-x-2">
@@ -379,7 +379,7 @@ export default function TriggerTracking() {
 
                   <Button 
                     type="submit" 
-                    className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-lg py-6 shadow-lg"
+                    className="w-full bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white text-lg py-6 shadow-md transition-all duration-200"
                     disabled={createTriggerEvent.isPending}
                   >
                     {createTriggerEvent.isPending ? (
@@ -399,12 +399,9 @@ export default function TriggerTracking() {
 
         {/* Recent Events - Enhanced at Bottom */}
         <div>
-          <Card className="bg-gradient-to-br from-slate-800/50 to-slate-700/50 border-slate-600/30 shadow-xl backdrop-blur-sm">
+          <Card className="bg-white/90 dark:bg-slate-800/50 border-slate-200 dark:border-slate-600/30 shadow-lg backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-xl text-slate-100">
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <Clock className="h-6 w-6 text-blue-400" />
-                </div>
+              <CardTitle className="text-xl text-slate-700 dark:text-slate-100">
                 Recent Trigger Events
               </CardTitle>
             </CardHeader>
