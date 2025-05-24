@@ -251,7 +251,15 @@ export default function TriggerTracking() {
                         <FormLabel className="text-white">How did you respond?</FormLabel>
                         <div className="space-y-3">
                           <FormControl>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                            <Select 
+                              onValueChange={(value) => {
+                                // Only update if it's a predefined action
+                                if (ACTION_OPTIONS.some(action => action.toLowerCase().replace(' ', '_') === value)) {
+                                  field.onChange(value);
+                                }
+                              }} 
+                              value={ACTION_OPTIONS.some(action => action.toLowerCase().replace(' ', '_') === field.value) ? field.value : ''}
+                            >
                               <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                                 <SelectValue placeholder="Select a common response..." />
                               </SelectTrigger>
@@ -270,7 +278,7 @@ export default function TriggerTracking() {
                           <FormControl>
                             <Textarea
                               placeholder="Describe your response in your own words..."
-                              value={field.value || ''}
+                              value={!ACTION_OPTIONS.some(action => action.toLowerCase().replace(' ', '_') === field.value) ? field.value || '' : ''}
                               onChange={(e) => field.onChange(e.target.value)}
                               className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
                               rows={3}
