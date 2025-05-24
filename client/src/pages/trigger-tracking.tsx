@@ -2,14 +2,15 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Save, Clock, Edit, Plus, X, Calendar } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Save, Clock, Edit, Plus, X, Calendar, AlertTriangle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -23,6 +24,7 @@ const formSchema = insertTriggerEventSchema.omit({ userId: true });
 export default function TriggerTracking() {
   const [selectedEmotions, setSelectedEmotions] = useState<string[]>([]);
   const [consequences, setConsequences] = useState<string[]>(['']);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -51,315 +53,391 @@ export default function TriggerTracking() {
         title: "Success", 
         description: "Trigger event saved successfully!" 
       });
+      form.reset({
+        eventSituation: '',
+        emotions: [],
+        actionTaken: '',
+        consequences: [],
+        startDate: getCurrentDate(),
+        endDate: null,
+        remindLater: false,
+      });
+      setSelectedEmotions([]);
+      setConsequences(['']);
       queryClient.invalidateQueries({ queryKey: ['/api/trigger-events'] });
-      form.reset();
-      setSelectedActions([]);
     },
     onError: () => {
       toast({ 
         title: "Error", 
-        description: "Failed to save trigger event", 
-        variant: "destructive" 
+        description: "Failed to save trigger event. Please try again.",
+        variant: "destructive"
       });
     },
   });
 
+  const handleEmotionToggle = (emotion: string) => {
+    const newEmotions = selectedEmotions.includes(emotion)
+      ? selectedEmotions.filter(e => e !== emotion)
+      : [...selectedEmotions, emotion];
+    
+    setSelectedEmotions(newEmotions);
+    form.setValue('emotions', newEmotions);
+  };
+
+  const addConsequence = () => {
+    setConsequences([...consequences, '']);
+  };
+
+  const updateConsequence = (index: number, value: string) => {
+    const newConsequences = [...consequences];
+    newConsequences[index] = value;
+    setConsequences(newConsequences);
+    form.setValue('consequences', newConsequences.filter(c => c.trim() !== ''));
+  };
+
+  const removeConsequence = (index: number) => {
+    const newConsequences = consequences.filter((_, i) => i !== index);
+    setConsequences(newConsequences);
+    form.setValue('consequences', newConsequences.filter(c => c.trim() !== ''));
+  };
+
   const onSubmit = (data: z.infer<typeof formSchema>) => {
-    createTriggerEvent.mutate(data);
+    const payload = {
+      ...data,
+      userId: 1,
+      emotions: selectedEmotions,
+      consequences: consequences.filter(c => c.trim() !== ''),
+    };
+    createTriggerEvent.mutate(payload as InsertTriggerEvent);
   };
 
-  const handleActionSelect = (action: string) => {
-    const currentAction = form.getValues('actionTaken');
-    if (currentAction === action) {
-      form.setValue('actionTaken', '');
-      setSelectedActions([]);
-    } else {
-      form.setValue('actionTaken', action);
-      setSelectedActions([action]);
-    }
+  const getEmotionsByCategory = (category: string) => {
+    return EMOTION_OPTIONS.filter(emotion => emotion.category === category);
   };
 
-  const getEmotionEmoji = (emotion: string) => {
-    return EMOTION_OPTIONS.find(option => option.value === emotion)?.emoji || '😐';
+  const calculateDuration = (startDate: string, endDate: string | null) => {
+    if (!endDate) return 'Ongoing';
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays === 1 ? '1 day' : `${diffDays} days`;
   };
 
   return (
-    <div className="py-6">
+    <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">Trigger Event Tracking</h2>
-        <p className="text-slate-400">Log events that trigger emotional responses and track patterns</p>
+        <h1 className="text-3xl font-bold mb-2">Trigger Event Tracking</h1>
+        <p className="text-gray-600 dark:text-gray-400">
+          Track situations that trigger emotional responses and how you handle them
+        </p>
       </div>
 
-      {/* New Trigger Form */}
-      <Card className="bg-slate-800 border-slate-700 mb-6">
-        <CardContent className="p-6">
-          <h3 className="text-xl font-semibold text-white mb-6">Log New Trigger Event</h3>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Event/Situation */}
-              <FormField
-                control={form.control}
-                name="eventSituation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-300">What happened? (Event/Situation)</FormLabel>
-                    <FormControl>
-                      <textarea
-                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:border-primary focus:ring-1 focus:ring-primary resize-none"
-                        rows={3}
-                        placeholder="Describe the situation or event that occurred..."
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              {/* Emotion Selection */}
-              <FormField
-                control={form.control}
-                name="emotion"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-300">Primary Emotion</FormLabel>
-                    <FormControl>
-                      <div>
-                        {!showCustomEmotion ? (
-                          <div>
-                            <EmotionWheel
-                              selectedEmotion={field.value}
-                              onEmotionSelect={(emotion) => {
-                                field.onChange(emotion);
-                                setCustomEmotion('');
-                              }}
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setShowCustomEmotion(true)}
-                              className="mt-4 border-slate-600 text-slate-300 hover:bg-slate-700"
-                            >
-                              <Plus className="mr-2" size={16} />
-                              Add Custom Emotion
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            <Input
-                              placeholder="Enter your custom emotion (e.g., 'deeply frustrated', 'cautiously hopeful')"
-                              value={customEmotion}
-                              onChange={(e) => {
-                                setCustomEmotion(e.target.value);
-                                field.onChange(e.target.value);
-                              }}
-                              className="bg-slate-700 border-slate-600 text-white"
-                            />
-                            <div className="flex space-x-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setShowCustomEmotion(false);
-                                  setCustomEmotion('');
-                                  field.onChange('');
-                                }}
-                                className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                              >
-                                Back to Wheel
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              {/* Action Taken */}
-              <FormField
-                control={form.control}
-                name="actionTaken"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-300">What did you do? (Action)</FormLabel>
-                    <FormControl>
-                      <div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
-                          {ACTION_OPTIONS.map((action) => (
-                            <button
-                              key={action}
-                              type="button"
-                              onClick={() => handleActionSelect(action)}
-                              className={`p-3 rounded-lg transition-colors text-sm ${
-                                selectedActions.includes(action)
-                                  ? 'bg-primary text-white'
-                                  : 'bg-slate-700 text-slate-300 hover:bg-primary hover:text-white'
-                              }`}
-                            >
-                              {action}
-                            </button>
-                          ))}
-                        </div>
-                        <textarea
-                          className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:border-primary focus:ring-1 focus:ring-primary resize-none"
-                          rows={2}
-                          placeholder="Describe your action in detail..."
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Recording Form */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5" />
+              Record Trigger Event
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {/* Event Situation */}
+                <FormField
+                  control={form.control}
+                  name="eventSituation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>What happened?</FormLabel>
+                      <FormControl>
+                        <Textarea
                           {...field}
+                          placeholder="Describe the situation that triggered your emotional response..."
+                          rows={3}
                         />
-                      </div>
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              {/* Consequence */}
-              <FormField
-                control={form.control}
-                name="consequence"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-300">What was the outcome? (Consequence)</FormLabel>
-                    <FormControl>
-                      <textarea
-                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:border-primary focus:ring-1 focus:ring-primary resize-none"
-                        rows={3}
-                        placeholder="How did things turn out? How did you feel afterward?"
-                        {...field}
+                {/* Timeline */}
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Date</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="endDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>End Date (optional)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="date" 
+                            {...field} 
+                            value={field.value || ''}
+                            placeholder="Leave empty if ongoing"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Emotions */}
+                <div className="space-y-4">
+                  <FormLabel>Emotions Experienced</FormLabel>
+                  
+                  {/* Negative Emotions */}
+                  <div>
+                    <h4 className="text-sm font-medium text-red-600 dark:text-red-400 mb-2">Challenging Emotions</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {getEmotionsByCategory('negative').map((emotion) => (
+                        <div key={emotion.value} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={emotion.value}
+                            checked={selectedEmotions.includes(emotion.value)}
+                            onCheckedChange={() => handleEmotionToggle(emotion.value)}
+                          />
+                          <label htmlFor={emotion.value} className="text-sm">
+                            {emotion.emoji} {emotion.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Positive Emotions */}
+                  <div>
+                    <h4 className="text-sm font-medium text-green-600 dark:text-green-400 mb-2">Positive Emotions</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {getEmotionsByCategory('positive').map((emotion) => (
+                        <div key={emotion.value} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={emotion.value}
+                            checked={selectedEmotions.includes(emotion.value)}
+                            onCheckedChange={() => handleEmotionToggle(emotion.value)}
+                          />
+                          <label htmlFor={emotion.value} className="text-sm">
+                            {emotion.emoji} {emotion.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Neutral Emotions */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Neutral Emotions</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {getEmotionsByCategory('neutral').map((emotion) => (
+                        <div key={emotion.value} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={emotion.value}
+                            checked={selectedEmotions.includes(emotion.value)}
+                            onCheckedChange={() => handleEmotionToggle(emotion.value)}
+                          />
+                          <label htmlFor={emotion.value} className="text-sm">
+                            {emotion.emoji} {emotion.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {selectedEmotions.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {selectedEmotions.map((emotion) => {
+                        const emotionData = EMOTION_OPTIONS.find(e => e.value === emotion);
+                        return (
+                          <Badge key={emotion} variant="secondary">
+                            {emotionData?.emoji} {emotionData?.label}
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Taken */}
+                <FormField
+                  control={form.control}
+                  name="actionTaken"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>How did you respond?</FormLabel>
+                      <FormControl>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select your response" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ACTION_OPTIONS.map((action) => (
+                              <SelectItem key={action} value={action.toLowerCase().replace(' ', '_')}>
+                                {action}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Consequences */}
+                <div className="space-y-4">
+                  <FormLabel>Consequences/Outcomes</FormLabel>
+                  {consequences.map((consequence, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        value={consequence}
+                        onChange={(e) => updateConsequence(index, e.target.value)}
+                        placeholder="What happened as a result?"
+                        className="flex-1"
                       />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                      {consequences.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeConsequence(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addConsequence}
+                    className="w-full"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Another Consequence
+                  </Button>
+                </div>
 
-              {/* Reminder Toggle */}
-              <FormField
-                control={form.control}
-                name="remindLater"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-300 mb-3 block">
-                      Do you want to reflect on this later?
-                    </FormLabel>
-                    <FormControl>
-                      <div className="flex items-center space-x-4">
+                {/* Remind Later */}
+                <FormField
+                  control={form.control}
+                  name="remindLater"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center space-x-2">
+                      <FormControl>
                         <Switch
                           checked={field.value}
                           onCheckedChange={field.onChange}
                         />
-                        <span className="text-slate-300">
-                          {field.value ? 'Remind me tonight' : 'No reminder'}
-                        </span>
-                      </div>
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                      </FormControl>
+                      <FormLabel>Remind me to follow up on this</FormLabel>
+                    </FormItem>
+                  )}
+                />
 
-              {/* Submit Buttons */}
-              <div className="flex space-x-4">
-                <Button
-                  type="submit"
-                  className="flex-1"
+                <Button 
+                  type="submit" 
+                  className="w-full"
                   disabled={createTriggerEvent.isPending}
                 >
-                  <Save className="mr-2" size={16} />
-                  {createTriggerEvent.isPending ? 'Saving...' : 'Save Trigger Event'}
+                  {createTriggerEvent.isPending ? (
+                    <>Saving...</>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Trigger Event
+                    </>
+                  )}
                 </Button>
-                {form.watch('remindLater') && (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => {
-                      toast({ 
-                        title: "Reminder Set", 
-                        description: "You'll be reminded to reflect on this event tonight" 
-                      });
-                    }}
-                  >
-                    <Clock className="mr-2" size={16} />
-                    Set Reminder
-                  </Button>
-                )}
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
 
-      {/* Trigger History */}
-      <Card className="bg-slate-800 border-slate-700">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-semibold text-white">Trigger History</h3>
-            <div className="flex space-x-2">
-              <Select defaultValue="">
-                <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                  <SelectValue placeholder="Filter by emotion" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Emotions</SelectItem>
-                  {EMOTION_OPTIONS.map((emotion) => (
-                    <SelectItem key={emotion.value} value={emotion.value}>
-                      {emotion.emoji} {emotion.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        {/* Recent Events */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Recent Trigger Events
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {triggerEvents.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">
+                  No trigger events recorded yet. Start by recording your first event above.
+                </p>
+              ) : (
+                triggerEvents.slice(0, 5).map((event) => (
+                  <Card key={event.id} className="border-l-4 border-l-orange-500">
+                    <CardContent className="pt-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-start">
+                          <p className="font-medium text-sm">
+                            {event.eventSituation.length > 60 
+                              ? `${event.eventSituation.substring(0, 60)}...` 
+                              : event.eventSituation
+                            }
+                          </p>
+                          <span className="text-xs text-gray-500">
+                            {formatTimeAgo(event.createdAt!)}
+                          </span>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-1">
+                          {event.emotions.map((emotion, idx) => {
+                            const emotionData = EMOTION_OPTIONS.find(e => e.value === emotion);
+                            return (
+                              <Badge key={idx} variant="outline" className="text-xs">
+                                {emotionData?.emoji} {emotionData?.label || emotion}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+
+                        <div className="text-xs text-gray-600 dark:text-gray-400">
+                          Duration: {calculateDuration(event.startDate, event.endDate)}
+                          {event.consequences.length > 0 && (
+                            <span className="ml-2">
+                              • {event.consequences.length} consequence{event.consequences.length > 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+
+                        {event.remindLater && (
+                          <Badge variant="secondary" className="text-xs">
+                            <Clock className="h-3 w-3 mr-1" />
+                            Follow-up needed
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
-          </div>
-          
-          <div className="space-y-4">
-            {triggerEvents.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-slate-400 mb-2">No trigger events logged yet</p>
-                <p className="text-sm text-slate-500">Start by logging your first trigger event above</p>
-              </div>
-            ) : (
-              triggerEvents.map((trigger) => (
-                <div key={trigger.id} className="border border-slate-700 rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="text-2xl">{getEmotionEmoji(trigger.emotion)}</div>
-                      <div>
-                        <p className="font-medium text-white capitalize">{trigger.emotion}</p>
-                        <p className="text-sm text-slate-400">{formatTimeAgo(new Date(trigger.createdAt!))}</p>
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
-                      <Edit size={16} />
-                    </Button>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-slate-400">Event:</span>
-                      <span className="text-white ml-2">{trigger.eventSituation}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">Action:</span>
-                      <span className="text-white ml-2">{trigger.actionTaken}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">Outcome:</span>
-                      <span className="text-white ml-2">{trigger.consequence}</span>
-                    </div>
-                    {trigger.remindLater && (
-                      <div className="flex items-center space-x-2 mt-2">
-                        <Clock size={14} className="text-yellow-400" />
-                        <span className="text-yellow-400 text-xs">Reminder set for reflection</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

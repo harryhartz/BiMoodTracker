@@ -309,9 +309,9 @@ export default function Insights() {
     doc.setFont(undefined, 'bold');
     doc.text('Date', 20, yPosition);
     doc.text('Situation', 50, yPosition);
-    doc.text('Emotion', 110, yPosition);
+    doc.text('Emotions', 110, yPosition);
     doc.text('Action', 140, yPosition);
-    doc.text('Result', 170, yPosition);
+    doc.text('Duration', 170, yPosition);
     yPosition += lineHeight + 2;
     
     // Line under header
@@ -328,14 +328,16 @@ export default function Insights() {
       
       // Wrap long text
       const situation = trigger.eventSituation.substring(0, 25) + (trigger.eventSituation.length > 25 ? '...' : '');
-      const emotion = trigger.emotion.substring(0, 15);
+      const emotions = trigger.emotions.slice(0, 2).join(', ') + (trigger.emotions.length > 2 ? '...' : '');
       const action = trigger.actionTaken.substring(0, 20) + (trigger.actionTaken.length > 20 ? '...' : '');
-      const result = trigger.consequence.substring(0, 15) + (trigger.consequence.length > 15 ? '...' : '');
+      const duration = trigger.endDate 
+        ? `${Math.ceil((new Date(trigger.endDate).getTime() - new Date(trigger.startDate).getTime()) / (1000 * 60 * 60 * 24))}d`
+        : 'Ongoing';
       
       doc.text(situation, 50, yPosition);
-      doc.text(emotion, 110, yPosition);
+      doc.text(emotions, 110, yPosition);
       doc.text(action, 140, yPosition);
-      doc.text(result, 170, yPosition);
+      doc.text(duration, 170, yPosition);
       
       yPosition += lineHeight;
       

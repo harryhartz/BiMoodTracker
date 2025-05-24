@@ -134,9 +134,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTriggerEvent(insertEvent: InsertTriggerEvent): Promise<TriggerEvent> {
+    // Calculate duration if both start and end dates are provided
+    let durationDays = null;
+    if (insertEvent.startDate && insertEvent.endDate) {
+      const start = new Date(insertEvent.startDate);
+      const end = new Date(insertEvent.endDate);
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      durationDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+
     const [event] = await db
       .insert(triggerEvents)
-      .values(insertEvent)
+      .values({
+        ...insertEvent,
+        durationDays
+      })
       .returning();
     return event;
   }
