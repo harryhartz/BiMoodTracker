@@ -572,11 +572,7 @@ export default function Insights() {
                   <span className="text-gray-400">More positive</span>
                 </div>
               </div>
-            ) : (
-              <div className="h-40 flex items-center justify-center bg-gray-700 rounded-lg">
-                <p className="text-gray-400">No mood data available for calendar view</p>
-              </div>
-            )}
+            </div>
           </CardContent>
         </Card>
 
