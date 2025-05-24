@@ -187,19 +187,23 @@ export default function Insights() {
     return correlationData;
   }, [filteredMoodEntries]);
 
-  // Mood Intensity Heat Map Data - Calendar format
+  // Mood Intensity Heat Map Data - Calendar format for CURRENT month
   const moodHeatMapData = useMemo(() => {
     const today = new Date();
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // Current month, not last month
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     
-    const heatMapData: { date: string; intensity: number; dayOfWeek: number; weekOfMonth: number }[] = [];
+    const heatMapData: { date: string; intensity: number; dayOfWeek: number; weekOfMonth: number; morningCount: number; eveningCount: number }[] = [];
     
     for (let d = new Date(startOfMonth); d <= endOfMonth; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split('T')[0];
       const dayEntries = filteredMoodEntries.filter(entry => entry.date === dateStr);
       
-      // Calculate average intensity for the day
+      // Count morning and evening entries separately
+      const morningEntries = dayEntries.filter(entry => entry.timeOfDay === 'morning');
+      const eveningEntries = dayEntries.filter(entry => entry.timeOfDay === 'evening');
+      
+      // Calculate average intensity for the day (combining morning and evening)
       const avgIntensity = dayEntries.length > 0 
         ? dayEntries.reduce((sum, entry) => sum + entry.overallMoodIntensity, 0) / dayEntries.length
         : 0;
@@ -208,7 +212,9 @@ export default function Insights() {
         date: dateStr,
         intensity: avgIntensity,
         dayOfWeek: d.getDay(),
-        weekOfMonth: Math.ceil(d.getDate() / 7)
+        weekOfMonth: Math.ceil(d.getDate() / 7),
+        morningCount: morningEntries.length,
+        eveningCount: eveningEntries.length
       });
     }
     
@@ -487,62 +493,71 @@ export default function Insights() {
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
               <Brain className="h-5 w-5" />
-              Mood Intensity Calendar
+              Mood Intensity Calendar - {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </CardTitle>
-            <p className="text-gray-400 text-sm">Visual heatmap of your daily mood patterns</p>
+            <p className="text-gray-400 text-sm">Daily average of morning + evening mood intensities (-3 to +3 scale)</p>
           </CardHeader>
           <CardContent>
-            {moodHeatMapData.length > 0 ? (
-              <div className="space-y-4">
-                {/* Calendar Grid */}
-                <div className="grid grid-cols-7 gap-2 text-center">
-                  {/* Day headers */}
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                    <div key={day} className="text-xs text-gray-400 font-medium p-2">
-                      {day}
-                    </div>
-                  ))}
+            <div className="space-y-4">
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-2 text-center">
+                {/* Day headers */}
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  <div key={day} className="text-xs text-gray-400 font-medium p-2">
+                    {day}
+                  </div>
+                ))}
+                
+                {/* Calendar days */}
+                {Array.from({ length: 42 }, (_, index) => {
+                  const today = new Date();
+                  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // Current month
+                  const firstDayOfWeek = startOfMonth.getDay();
+                  const dayIndex = index - firstDayOfWeek;
+                  const currentDate = new Date(startOfMonth);
+                  currentDate.setDate(startOfMonth.getDate() + dayIndex);
                   
-                  {/* Calendar days */}
-                  {Array.from({ length: 42 }, (_, index) => {
-                    const today = new Date();
-                    const startOfMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-                    const firstDayOfWeek = startOfMonth.getDay();
-                    const dayIndex = index - firstDayOfWeek;
-                    const currentDate = new Date(startOfMonth);
-                    currentDate.setDate(startOfMonth.getDate() + dayIndex);
-                    
-                    const dateStr = currentDate.toISOString().split('T')[0];
-                    const dayData = moodHeatMapData.find(d => d.date === dateStr);
-                    
-                    const isCurrentMonth = currentDate.getMonth() === (today.getMonth() - 1);
-                    const intensity = dayData?.intensity || 0;
-                    
-                    // Color intensity based on mood (darker = better mood)
-                    const getIntensityColor = (intensity: number) => {
-                      if (intensity === 0) return 'bg-gray-700'; // No data
-                      if (intensity >= 2) return 'bg-green-600'; // Very positive
-                      if (intensity >= 1) return 'bg-green-500'; // Positive
-                      if (intensity >= 0) return 'bg-yellow-500'; // Neutral
-                      if (intensity >= -1) return 'bg-orange-500'; // Negative
-                      return 'bg-red-500'; // Very negative
-                    };
-                    
-                    return (
-                      <div
-                        key={index}
-                        className={`
-                          aspect-square rounded-lg flex items-center justify-center text-xs font-medium
-                          ${isCurrentMonth ? getIntensityColor(intensity) : 'bg-gray-800'}
-                          ${isCurrentMonth && intensity !== 0 ? 'text-white' : 'text-gray-400'}
-                        `}
-                        title={isCurrentMonth ? `${currentDate.toLocaleDateString()}: Mood ${intensity.toFixed(1)}` : ''}
-                      >
-                        {isCurrentMonth ? currentDate.getDate() : ''}
-                      </div>
-                    );
-                  })}
-                </div>
+                  const dateStr = currentDate.toISOString().split('T')[0];
+                  const dayData = moodHeatMapData.find(d => d.date === dateStr);
+                  
+                  const isCurrentMonth = currentDate.getMonth() === today.getMonth();
+                  const intensity = dayData?.intensity || 0;
+                  const morningCount = dayData?.morningCount || 0;
+                  const eveningCount = dayData?.eveningCount || 0;
+                  
+                  // Color intensity based on mood (darker = better mood)
+                  const getIntensityColor = (intensity: number) => {
+                    if (intensity === 0) return 'bg-gray-700'; // No data
+                    if (intensity >= 2) return 'bg-green-600'; // Very positive
+                    if (intensity >= 1) return 'bg-green-500'; // Positive
+                    if (intensity >= 0) return 'bg-yellow-500'; // Neutral
+                    if (intensity >= -1) return 'bg-orange-500'; // Negative
+                    return 'bg-red-500'; // Very negative
+                  };
+                  
+                  const tooltipText = isCurrentMonth 
+                    ? `${currentDate.toLocaleDateString()}\nAvg Mood: ${intensity.toFixed(1)}\nMorning entries: ${morningCount}\nEvening entries: ${eveningCount}`
+                    : '';
+                  
+                  return (
+                    <div
+                      key={index}
+                      className={`
+                        aspect-square rounded-lg flex items-center justify-center text-xs font-medium relative
+                        ${isCurrentMonth ? getIntensityColor(intensity) : 'bg-gray-800'}
+                        ${isCurrentMonth && intensity !== 0 ? 'text-white' : 'text-gray-400'}
+                      `}
+                      title={tooltipText}
+                    >
+                      {isCurrentMonth ? currentDate.getDate() : ''}
+                      {/* Small indicator for partial data */}
+                      {isCurrentMonth && (morningCount > 0 || eveningCount > 0) && (morningCount + eveningCount < 2) && (
+                        <div className="absolute top-0 right-0 w-1 h-1 bg-white rounded-full opacity-60"></div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
                 
                 {/* Legend */}
                 <div className="flex items-center justify-center space-x-4 text-xs">
