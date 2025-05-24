@@ -296,48 +296,47 @@ export default function Insights() {
     // Create professional PDF document
     const doc = new jsPDF();
     
-    // App color scheme (matching your dark theme)
+    // Professional color scheme - Grey and Black only
     const colors = {
-      primary: [79, 130, 255],     // Blue from your app
-      secondary: [139, 92, 246],   // Purple accent
-      success: [34, 197, 94],      // Green
-      warning: [251, 191, 36],     // Yellow
-      danger: [239, 68, 68],       // Red
-      text: [15, 23, 42],          // Dark text
-      textMuted: [100, 116, 139],  // Muted text
-      background: [248, 250, 252], // Light background
-      border: [226, 232, 240],     // Light border
-      cardBg: [255, 255, 255]      // White cards
+      text: [0, 0, 0],           // Pure black text
+      textMuted: [128, 128, 128], // Grey text
+      background: [245, 245, 245], // Light grey background
+      border: [200, 200, 200],    // Grey border
+      cardBg: [255, 255, 255],    // White cards
+      lightGrey: [240, 240, 240], // Light grey
+      mediumGrey: [180, 180, 180] // Medium grey
     };
     
     // === COVER PAGE ===
-    // Modern header with gradient simulation
+    // Professional white-blue gradient background
     for (let i = 0; i < 50; i++) {
-      const opacity = 1 - (i / 50);
-      const r = Math.round(colors.primary[0] + (255 - colors.primary[0]) * (i / 50));
-      const g = Math.round(colors.primary[1] + (255 - colors.primary[1]) * (i / 50));
-      const b = Math.round(colors.primary[2] + (255 - colors.primary[2]) * (i / 50));
+      const ratio = i / 50;
+      // White to light blue gradient
+      const r = Math.round(255 - (255 - 230) * ratio);
+      const g = Math.round(255 - (255 - 240) * ratio);
+      const b = Math.round(255 - (255 - 255) * ratio);
       doc.setFillColor(r, g, b);
       doc.rect(0, i * 2, 210, 2, 'F');
     }
     
     // App branding with professional font
-    doc.setTextColor(255, 255, 255);
+    doc.setTextColor(0, 0, 0); // Black text
     doc.setFontSize(32);
     doc.setFont('times', 'bold');
     doc.text('Mental Health Tracker', 105, 40, { align: 'center' });
     
     doc.setFontSize(16);
     doc.setFont('times', 'normal');
+    doc.setTextColor(128, 128, 128); // Grey text
     doc.text('Trigger Events Analysis Report', 105, 55, { align: 'center' });
     
     // Report metadata card
-    doc.setFillColor(...colors.cardBg);
-    doc.setDrawColor(...colors.border);
+    doc.setFillColor(255, 255, 255); // White background
+    doc.setDrawColor(200, 200, 200); // Grey border
     doc.roundedRect(30, 80, 150, 60, 5, 5, 'FD');
     
     // Report stats with professional font
-    doc.setTextColor(15, 23, 42);
+    doc.setTextColor(0, 0, 0); // Black text
     doc.setFontSize(14);
     doc.setFont('times', 'bold');
     doc.text('Report Summary', 105, 95, { align: 'center' });
@@ -392,26 +391,26 @@ export default function Insights() {
       doc.setPage(pageNum);
       
       // Footer background
-      doc.setFillColor(...colors.background);
+      doc.setFillColor(245, 245, 245); // Light grey background
       doc.rect(0, 275, 210, 22, 'F');
       
       // Footer line
-      doc.setDrawColor(...colors.primary);
+      doc.setDrawColor(128, 128, 128); // Grey line
       doc.setLineWidth(1);
       doc.line(20, 278, 190, 278);
       
       // Footer content
-      doc.setTextColor(...colors.textMuted);
+      doc.setTextColor(128, 128, 128); // Grey text
       doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('times', 'normal');
       doc.text('Mental Health Tracker - Confidential Report', 25, 285);
       doc.text(`Generated on ${new Date().toLocaleDateString()}`, 25, 290);
       
       // Page number with styling
-      doc.setFillColor(...colors.primary);
+      doc.setFillColor(0, 0, 0); // Black background for page number
       doc.roundedRect(170, 282, 15, 8, 2, 2, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 255, 255); // White text on black background
+      doc.setFont('times', 'bold');
       doc.text(`${pageNum}`, 177.5, 286.5, { align: 'center' });
     };
     
@@ -480,9 +479,9 @@ export default function Insights() {
       doc.setTextColor(15, 23, 42);
       doc.text(eventDate, leftMargin + 18, cardY + 1);
       
-      // Severity badge with appropriate color
+      // Severity badge with grey color scheme
       const severity = trigger.emotions.length > 3 ? 'High' : trigger.emotions.length > 1 ? 'Medium' : 'Low';
-      const severityColor = severity === 'High' ? colors.danger : severity === 'Medium' ? colors.warning : colors.success;
+      const severityColor = severity === 'High' ? [0, 0, 0] : severity === 'Medium' ? [128, 128, 128] : [180, 180, 180];
       
       doc.setFillColor(severityColor[0], severityColor[1], severityColor[2]);
       doc.roundedRect(rightMargin - 35, cardY - 4, 30, 10, 5, 5, 'F');
@@ -496,7 +495,7 @@ export default function Insights() {
       // Situation section with professional styling
       doc.setFontSize(11);
       doc.setFont('times', 'bold');
-      doc.setTextColor(79, 130, 255);
+      doc.setTextColor(0, 0, 0); // Black text
       doc.text('SITUATION', leftMargin + 8, cardY);
       cardY += 8;
       
@@ -504,8 +503,8 @@ export default function Insights() {
       const situationLines = doc.splitTextToSize(trigger.eventSituation, textWidth - 25);
       const situationHeight = Math.max(situationLines.length * 4.5 + 8, 18);
       
-      doc.setFillColor(248, 250, 252);
-      doc.setDrawColor(226, 232, 240);
+      doc.setFillColor(240, 240, 240); // Light grey background
+      doc.setDrawColor(200, 200, 200); // Grey border
       doc.roundedRect(leftMargin + 8, cardY - 4, textWidth - 20, situationHeight, 4, 4, 'FD');
       
       doc.setFont('times', 'normal');
