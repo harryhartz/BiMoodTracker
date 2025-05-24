@@ -230,7 +230,7 @@ export default function TriggerTracking() {
                     </div>
 
                     {/* Positive Emotions */}
-                    <div className="p-4 bg-slate-100 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-slate-700/50">
+                    <div className="p-4 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-slate-700/50 bg-[#141c2f]">
                       <h4 className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-3">Positive Emotions</h4>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {getEmotionsByCategory('positive').map((emotion) => (
