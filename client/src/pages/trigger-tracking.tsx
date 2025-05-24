@@ -379,15 +379,15 @@ export default function TriggerTracking() {
                         <CardContent className="p-4">
                           <div className="space-y-3">
                             <div className="flex justify-between items-start">
-                              <span className="text-xs text-slate-600 dark:text-slate-400 bg-slate-200 dark:bg-slate-600 px-2 py-1 rounded">
+                              <span className="text-xs text-slate-400 bg-slate-600 px-2 py-1 rounded">
                                 {formatTimeAgo(event.createdAt!)}
                               </span>
-                              <Badge variant="outline" className="text-xs border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400">
+                              <Badge variant="outline" className="text-xs border-slate-600 text-slate-400">
                                 Trigger
                               </Badge>
                             </div>
                             
-                            <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                            <p className="text-sm text-white leading-relaxed">
                               {event.eventSituation.length > 80 
                                 ? `${event.eventSituation.substring(0, 80)}...` 
                                 : event.eventSituation
@@ -399,20 +399,20 @@ export default function TriggerTracking() {
                                 {event.emotions.slice(0, 3).map((emotion, idx) => {
                                   const emotionData = EMOTION_OPTIONS.find(e => e.value === emotion);
                                   return (
-                                    <Badge key={idx} variant="secondary" className="text-xs bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300">
+                                    <Badge key={idx} variant="secondary" className="text-xs bg-slate-600 text-white">
                                       {emotionData?.emoji} {emotionData?.label || emotion}
                                     </Badge>
                                   );
                                 })}
                                 {event.emotions.length > 3 && (
-                                  <Badge variant="secondary" className="text-xs bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-400">
+                                  <Badge variant="secondary" className="text-xs bg-slate-600 text-slate-400">
                                     +{event.emotions.length - 3} more
                                   </Badge>
                                 )}
                               </div>
                             )}
 
-                            <div className="text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-600 pt-2">
+                            <div className="text-xs text-slate-400 border-t border-slate-600 pt-2">
                               <div className="flex justify-between items-center">
                                 <span>Duration: {calculateDuration(event.startDate, event.endDate)}</span>
                                 {event.consequences.length > 0 && (
