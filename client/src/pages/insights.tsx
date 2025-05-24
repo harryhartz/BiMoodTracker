@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Activity, Brain, Weight, Download, FileText, Camera, Pill } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, ScatterChart, Scatter } from "recharts";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -157,6 +157,62 @@ export default function Insights() {
       compliance,
       missedDoses: totalMedChecks - takenOnTime
     };
+  }, [filteredMoodEntries]);
+
+  // Sleep-Mood Correlation Data
+  const sleepMoodData = useMemo(() => {
+    const correlationData: { sleepQuality: number; nextDayMood: number; date: string }[] = [];
+    
+    // Sort entries by date
+    const sortedEntries = [...filteredMoodEntries].sort((a, b) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+    
+    for (let i = 0; i < sortedEntries.length - 1; i++) {
+      const currentEntry = sortedEntries[i];
+      const nextEntry = sortedEntries[i + 1];
+      
+      // Look for evening entry with sleep quality and next morning entry
+      if (currentEntry.timeOfDay === 'evening' && 
+          currentEntry.sleepQuality && 
+          nextEntry.timeOfDay === 'morning') {
+        correlationData.push({
+          sleepQuality: currentEntry.sleepQuality,
+          nextDayMood: nextEntry.overallMoodIntensity,
+          date: nextEntry.date
+        });
+      }
+    }
+    
+    return correlationData;
+  }, [filteredMoodEntries]);
+
+  // Mood Intensity Heat Map Data - Calendar format
+  const moodHeatMapData = useMemo(() => {
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    
+    const heatMapData: { date: string; intensity: number; dayOfWeek: number; weekOfMonth: number }[] = [];
+    
+    for (let d = new Date(startOfMonth); d <= endOfMonth; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0];
+      const dayEntries = filteredMoodEntries.filter(entry => entry.date === dateStr);
+      
+      // Calculate average intensity for the day
+      const avgIntensity = dayEntries.length > 0 
+        ? dayEntries.reduce((sum, entry) => sum + entry.overallMoodIntensity, 0) / dayEntries.length
+        : 0;
+      
+      heatMapData.push({
+        date: dateStr,
+        intensity: avgIntensity,
+        dayOfWeek: d.getDay(),
+        weekOfMonth: Math.ceil(d.getDate() / 7)
+      });
+    }
+    
+    return heatMapData;
   }, [filteredMoodEntries]);
 
 
@@ -362,6 +418,148 @@ export default function Insights() {
             ) : (
               <div className="h-40 flex items-center justify-center bg-gray-700 rounded-lg">
                 <p className="text-gray-400">No mood data available</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Sleep-Mood Correlation Scatter Plot */}
+        {sleepMoodData.length > 0 && (
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Brain className="h-5 w-5" />
+                Sleep Quality vs Next Day Mood
+              </CardTitle>
+              <p className="text-gray-400 text-sm">How your sleep quality affects your mood the next day</p>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ScatterChart data={sleepMoodData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis 
+                      dataKey="sleepQuality" 
+                      stroke="#9CA3AF"
+                      tick={{ fill: '#9CA3AF' }}
+                      label={{ value: 'Sleep Quality (1-5)', position: 'insideBottom', offset: -10, style: { fill: '#9CA3AF' } }}
+                      domain={[1, 5]}
+                    />
+                    <YAxis 
+                      dataKey="nextDayMood"
+                      stroke="#9CA3AF"
+                      tick={{ fill: '#9CA3AF' }}
+                      label={{ value: 'Next Day Mood Intensity', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF' } }}
+                      domain={[-3, 3]}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1F2937', 
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#F9FAFB'
+                      }}
+                      formatter={(value, name) => [
+                        name === 'nextDayMood' ? `Mood: ${value}` : `Sleep: ${value}/5`,
+                        name === 'nextDayMood' ? 'Next Day Mood' : 'Sleep Quality'
+                      ]}
+                    />
+                    <Scatter 
+                      dataKey="nextDayMood" 
+                      fill="#8B5CF6"
+                      fillOpacity={0.8}
+                      stroke="#A855F7"
+                      strokeWidth={2}
+                      r={6}
+                    />
+                  </ScatterChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 text-sm text-gray-400">
+                <p>💡 Tip: Look for patterns - better sleep quality often correlates with improved mood!</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Mood Intensity Heat Map Calendar */}
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Brain className="h-5 w-5" />
+              Mood Intensity Calendar
+            </CardTitle>
+            <p className="text-gray-400 text-sm">Visual heatmap of your daily mood patterns</p>
+          </CardHeader>
+          <CardContent>
+            {moodHeatMapData.length > 0 ? (
+              <div className="space-y-4">
+                {/* Calendar Grid */}
+                <div className="grid grid-cols-7 gap-2 text-center">
+                  {/* Day headers */}
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                    <div key={day} className="text-xs text-gray-400 font-medium p-2">
+                      {day}
+                    </div>
+                  ))}
+                  
+                  {/* Calendar days */}
+                  {Array.from({ length: 42 }, (_, index) => {
+                    const today = new Date();
+                    const startOfMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    const firstDayOfWeek = startOfMonth.getDay();
+                    const dayIndex = index - firstDayOfWeek;
+                    const currentDate = new Date(startOfMonth);
+                    currentDate.setDate(startOfMonth.getDate() + dayIndex);
+                    
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    const dayData = moodHeatMapData.find(d => d.date === dateStr);
+                    
+                    const isCurrentMonth = currentDate.getMonth() === (today.getMonth() - 1);
+                    const intensity = dayData?.intensity || 0;
+                    
+                    // Color intensity based on mood (darker = better mood)
+                    const getIntensityColor = (intensity: number) => {
+                      if (intensity === 0) return 'bg-gray-700'; // No data
+                      if (intensity >= 2) return 'bg-green-600'; // Very positive
+                      if (intensity >= 1) return 'bg-green-500'; // Positive
+                      if (intensity >= 0) return 'bg-yellow-500'; // Neutral
+                      if (intensity >= -1) return 'bg-orange-500'; // Negative
+                      return 'bg-red-500'; // Very negative
+                    };
+                    
+                    return (
+                      <div
+                        key={index}
+                        className={`
+                          aspect-square rounded-lg flex items-center justify-center text-xs font-medium
+                          ${isCurrentMonth ? getIntensityColor(intensity) : 'bg-gray-800'}
+                          ${isCurrentMonth && intensity !== 0 ? 'text-white' : 'text-gray-400'}
+                        `}
+                        title={isCurrentMonth ? `${currentDate.toLocaleDateString()}: Mood ${intensity.toFixed(1)}` : ''}
+                      >
+                        {isCurrentMonth ? currentDate.getDate() : ''}
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Legend */}
+                <div className="flex items-center justify-center space-x-4 text-xs">
+                  <span className="text-gray-400">Less positive</span>
+                  <div className="flex space-x-1">
+                    <div className="w-3 h-3 bg-red-500 rounded"></div>
+                    <div className="w-3 h-3 bg-orange-500 rounded"></div>
+                    <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+                    <div className="w-3 h-3 bg-green-500 rounded"></div>
+                    <div className="w-3 h-3 bg-green-600 rounded"></div>
+                  </div>
+                  <span className="text-gray-400">More positive</span>
+                </div>
+              </div>
+            ) : (
+              <div className="h-40 flex items-center justify-center bg-gray-700 rounded-lg">
+                <p className="text-gray-400">No mood data available for calendar view</p>
               </div>
             )}
           </CardContent>
