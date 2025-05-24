@@ -133,8 +133,8 @@ export default function TriggerTracking() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Recording Form */}
+      {/* Recording Form - Full Width */}
+      <div className="mb-8">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -371,68 +371,80 @@ export default function TriggerTracking() {
             </Form>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Recent Events */}
-        <Card>
+      {/* Recent Events - Moved to Bottom */}
+      <div className="mt-12">
+        <Card className="bg-slate-800/50 border-slate-700">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-slate-200">
+              <Clock className="h-5 w-5 text-blue-400" />
               Recent Trigger Events
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {triggerEvents.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">
-                  No trigger events recorded yet. Start by recording your first event above.
-                </p>
+                <div className="text-center py-12">
+                  <AlertTriangle className="mx-auto h-12 w-12 text-slate-500 mb-4" />
+                  <p className="text-slate-400 text-lg mb-2">No trigger events recorded yet</p>
+                  <p className="text-slate-500 text-sm">Start tracking your triggers to better understand your patterns</p>
+                </div>
               ) : (
-                triggerEvents.slice(0, 5).map((event) => (
-                  <Card key={event.id} className="border-l-4 border-l-orange-500">
-                    <CardContent className="pt-4">
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-start">
-                          <p className="font-medium text-sm">
-                            {event.eventSituation.length > 60 
-                              ? `${event.eventSituation.substring(0, 60)}...` 
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {triggerEvents.slice(0, 6).map((event) => (
+                    <Card key={event.id} className="bg-slate-700/50 border-slate-600 hover:border-slate-500 transition-colors">
+                      <CardContent className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-start">
+                            <span className="text-xs text-blue-400 bg-blue-500/20 px-2 py-1 rounded-full">
+                              {formatTimeAgo(event.createdAt!)}
+                            </span>
+                            <Badge variant="outline" className="text-xs border-orange-500/50 text-orange-300">
+                              Trigger
+                            </Badge>
+                          </div>
+                          
+                          <p className="text-sm text-slate-200 leading-relaxed">
+                            {event.eventSituation.length > 80 
+                              ? `${event.eventSituation.substring(0, 80)}...` 
                               : event.eventSituation
                             }
                           </p>
-                          <span className="text-xs text-gray-500">
-                            {formatTimeAgo(event.createdAt!)}
-                          </span>
-                        </div>
-                        
-                        <div className="flex flex-wrap gap-1">
-                          {event.emotions.map((emotion, idx) => {
-                            const emotionData = EMOTION_OPTIONS.find(e => e.value === emotion);
-                            return (
-                              <Badge key={idx} variant="outline" className="text-xs">
-                                {emotionData?.emoji} {emotionData?.label || emotion}
-                              </Badge>
-                            );
-                          })}
-                        </div>
-
-                        <div className="text-xs text-gray-600 dark:text-gray-400">
-                          Duration: {calculateDuration(event.startDate, event.endDate)}
-                          {event.consequences.length > 0 && (
-                            <span className="ml-2">
-                              • {event.consequences.length} consequence{event.consequences.length > 1 ? 's' : ''}
-                            </span>
+                          
+                          {event.emotions.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {event.emotions.slice(0, 3).map((emotion, idx) => {
+                                const emotionData = EMOTION_OPTIONS.find(e => e.value === emotion);
+                                return (
+                                  <Badge key={idx} variant="secondary" className="text-xs bg-slate-600/50 text-slate-300">
+                                    {emotionData?.emoji} {emotionData?.label || emotion}
+                                  </Badge>
+                                );
+                              })}
+                              {event.emotions.length > 3 && (
+                                <Badge variant="secondary" className="text-xs bg-slate-600/50 text-slate-400">
+                                  +{event.emotions.length - 3} more
+                                </Badge>
+                              )}
+                            </div>
                           )}
-                        </div>
 
-                        {event.remindLater && (
-                          <Badge variant="secondary" className="text-xs">
-                            <Clock className="h-3 w-3 mr-1" />
-                            Follow-up needed
-                          </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                          <div className="text-xs text-slate-400 border-t border-slate-600 pt-2">
+                            <div className="flex justify-between items-center">
+                              <span>Duration: {calculateDuration(event.startDate, event.endDate)}</span>
+                              {event.consequences.length > 0 && (
+                                <span className="text-orange-400">
+                                  • {event.consequences.length} consequence{event.consequences.length > 1 ? 's' : ''}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               )}
             </div>
           </CardContent>
