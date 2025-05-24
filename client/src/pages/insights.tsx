@@ -213,7 +213,7 @@ export default function Insights() {
       
       // Look for evening entry with sleep quality and next morning entry
       if (currentEntry.timeOfDay === 'evening' && 
-          currentEntry.sleepQuality !== undefined && 
+          currentEntry.sleepQuality && 
           nextEntry.timeOfDay === 'morning') {
         correlationData.push({
           sleepQuality: currentEntry.sleepQuality,
@@ -297,7 +297,7 @@ export default function Insights() {
     
     // Professional header with better spacing
     doc.setFontSize(22);
-    doc.setFont("helvetica", 'bold');
+    doc.setFont(undefined, 'bold');
     doc.text('Trigger Events Report', 105, 25, { align: 'center' });
     
     // Header line
@@ -306,7 +306,7 @@ export default function Insights() {
     
     // Report info
     doc.setFontSize(10);
-    doc.setFont("helvetica", 'normal');
+    doc.setFont(undefined, 'normal');
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 30, 45);
     doc.text(`Total Events: ${filteredTriggerEvents.length}`, 30, 52);
     
@@ -328,7 +328,7 @@ export default function Insights() {
       doc.rect(leftMargin - 5, yPosition - 3, textWidth + 10, 12, 'F');
       
       doc.setFontSize(12);
-      doc.setFont("helvetica", 'bold');
+      doc.setFont(undefined, 'bold');
       doc.setTextColor(0, 0, 0);
       doc.text(`Event ${index + 1}`, leftMargin, yPosition + 4);
       doc.text(`${new Date(trigger.createdAt || '').toLocaleDateString()}`, rightMargin - 30, yPosition + 4);
@@ -336,11 +336,11 @@ export default function Insights() {
       
       // Situation
       doc.setFontSize(10);
-      doc.setFont("helvetica", 'bold');
+      doc.setFont(undefined, 'bold');
       doc.text('Situation:', leftMargin, yPosition);
       yPosition += 6;
       
-      doc.setFont("helvetica", 'normal');
+      doc.setFont(undefined, 'normal');
       doc.setFontSize(9);
       const situationLines = doc.splitTextToSize(trigger.eventSituation, textWidth - 5);
       doc.text(situationLines, leftMargin + 3, yPosition);
@@ -348,11 +348,11 @@ export default function Insights() {
       
       // Emotions in a more compact format
       if (trigger.emotions.length > 0) {
-        doc.setFont("helvetica", 'bold');
+        doc.setFont(undefined, 'bold');
         doc.setFontSize(10);
         doc.text('Emotions:', leftMargin, yPosition);
         
-        doc.setFont("helvetica", 'normal');
+        doc.setFont(undefined, 'normal');
         doc.setFontSize(9);
         const emotions = trigger.emotions.map(emotion => {
           const emotionData = EMOTION_OPTIONS.find(e => e.value === emotion);
@@ -366,12 +366,12 @@ export default function Insights() {
       
       // Action taken
       if (trigger.actionTaken) {
-        doc.setFont("helvetica", 'bold');
+        doc.setFont(undefined, 'bold');
         doc.setFontSize(10);
         doc.text('Action:', leftMargin, yPosition);
         yPosition += 6;
         
-        doc.setFont("helvetica", 'normal');
+        doc.setFont(undefined, 'normal');
         doc.setFontSize(9);
         const actionLines = doc.splitTextToSize(trigger.actionTaken, textWidth - 5);
         doc.text(actionLines, leftMargin + 3, yPosition);
@@ -380,12 +380,12 @@ export default function Insights() {
       
       // Consequences
       if (trigger.consequences.length > 0 && trigger.consequences.some(c => c.trim())) {
-        doc.setFont("helvetica", 'bold');
+        doc.setFont(undefined, 'bold');
         doc.setFontSize(10);
         doc.text('Consequences:', leftMargin, yPosition);
         yPosition += 6;
         
-        doc.setFont("helvetica", 'normal');
+        doc.setFont(undefined, 'normal');
         doc.setFontSize(9);
         trigger.consequences.forEach(consequence => {
           if (consequence.trim()) {
@@ -402,7 +402,7 @@ export default function Insights() {
         ? `${Math.ceil((new Date(trigger.endDate).getTime() - new Date(trigger.startDate).getTime()) / (1000 * 60 * 60 * 24))} days`
         : 'Ongoing';
       
-      doc.setFont("helvetica", 'bold');
+      doc.setFont(undefined, 'bold');
       doc.setFontSize(9);
       doc.text(`Duration: ${duration}`, leftMargin, yPosition);
       yPosition += 20;
@@ -413,7 +413,7 @@ export default function Insights() {
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(8);
-      doc.setFont("helvetica", 'normal');
+      doc.setFont(undefined, 'normal');
       doc.text(`Page ${i} of ${pageCount}`, 105, 285, { align: 'center' });
     }
 
@@ -422,91 +422,62 @@ export default function Insights() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header with Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-gray-800 border-gray-700 hover:bg-gray-700 transition-colors">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-400">Average Mood</p>
-                  <h3 className="text-2xl font-bold text-white mt-1">{averageMood}</h3>
-                  <p className="text-sm text-gray-400 mt-1">Last 30 days</p>
-                </div>
-                <div className="rounded-full p-3 bg-blue-500/20 text-blue-500">
-                  <Activity className="h-5 w-5" />
-                </div>
+      <div className="max-w-6xl mx-auto space-y-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold">Insights Dashboard</h1>
+          <p className="text-gray-400">Your mental health analytics for the past month</p>
+        </div>
+
+        {/* Key Statistics */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="bg-gray-800 border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Brain className="h-5 w-5 text-purple-400" />
+                <h3 className="font-medium text-gray-300">Average Mood</h3>
               </div>
-              <div className="mt-4">
-                <Badge variant="outline" className={
-                  moodTrend === 'improving' 
-                    ? 'bg-green-500/20 text-green-500 border-green-500' 
-                    : moodTrend === 'declining' 
-                      ? 'bg-red-500/20 text-red-500 border-red-500'
-                      : 'bg-yellow-500/20 text-yellow-500 border-yellow-500'
-                }>
-                  {moodTrend === 'improving' ? <TrendingUp className="h-3 w-3 mr-1" /> : null}
-                  {moodTrend === 'improving' ? 'Improving' : moodTrend === 'declining' ? 'Declining' : 'Stable'}
-                </Badge>
-              </div>
+              <div className="text-2xl font-bold text-purple-400 mt-2">{averageMood}</div>
+              <Badge variant={moodTrend === 'improving' ? 'default' : moodTrend === 'declining' ? 'destructive' : 'secondary'} className="mt-2">
+                {moodTrend === 'improving' ? '↗ Improving' : moodTrend === 'declining' ? '↘ Declining' : '→ Stable'}
+              </Badge>
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border-gray-700 hover:bg-gray-700 transition-colors">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-400">Trigger Events</p>
-                  <h3 className="text-2xl font-bold text-white mt-1">{filteredTriggerEvents.length}</h3>
-                  <p className="text-sm text-gray-400 mt-1">Last 30 days</p>
-                </div>
-                <div className="rounded-full p-3 bg-purple-500/20 text-purple-500">
-                  <Brain className="h-5 w-5" />
-                </div>
+          <Card className="bg-gray-800 border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Activity className="h-5 w-5 text-green-400" />
+                <h3 className="font-medium text-gray-300">Mood Entries</h3>
               </div>
-              <div className="mt-4">
-                <Button variant="outline" size="sm" className="text-xs h-7 border-gray-600" onClick={exportTriggersPDF}>
-                  <Download className="h-3 w-3 mr-1" />
-                  Export Report
-                </Button>
-              </div>
+              <div className="text-2xl font-bold text-green-400 mt-2">{filteredMoodEntries.length}</div>
+              <div className="text-sm text-gray-400 mt-1">this month</div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border-gray-700 hover:bg-gray-700 transition-colors">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-400">Journal Entries</p>
-                  <h3 className="text-2xl font-bold text-white mt-1">{filteredThoughts.length}</h3>
-                  <p className="text-sm text-gray-400 mt-1">Last 30 days</p>
-                </div>
-                <div className="rounded-full p-3 bg-green-500/20 text-green-500">
-                  <FileText className="h-5 w-5" />
-                </div>
+          <Card className="bg-gray-800 border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <TrendingUp className="h-5 w-5 text-blue-400" />
+                <h3 className="font-medium text-gray-300">Journal Entries</h3>
               </div>
+              <div className="text-2xl font-bold text-blue-400 mt-2">{filteredThoughts.length}</div>
+              <div className="text-sm text-gray-400 mt-1">thoughts recorded</div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border-gray-700 hover:bg-gray-700 transition-colors">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-400">Medication Compliance</p>
-                  <h3 className="text-2xl font-bold text-white mt-1">{medicationStats.compliance}%</h3>
-                  <p className="text-sm text-gray-400 mt-1">
-                    {medicationStats.takenOnTime}/{medicationStats.totalMeds} doses taken
-                  </p>
-                </div>
-                <div className="rounded-full p-3 bg-orange-500/20 text-orange-500">
-                  <Pill className="h-5 w-5" />
-                </div>
+          <Card className="bg-gray-800 border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Pill className="h-5 w-5 text-green-400" />
+                <h3 className="font-medium text-gray-300">Med Compliance</h3>
               </div>
+              <div className="text-2xl font-bold text-green-400 mt-2">{medicationStats.compliance}%</div>
+              <div className="text-sm text-gray-400 mt-1">{medicationStats.takenOnTime}/{medicationStats.totalMeds} taken</div>
             </CardContent>
           </Card>
         </div>
-        
-        {/* Weight Chart with Export - Moved to top */}
+
+        {/* Weight Chart with Export */}
         {weightData.length > 0 && (
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader className="flex flex-row items-center justify-between">
@@ -531,11 +502,9 @@ export default function Insights() {
                       label={{ value: 'Date', position: 'insideBottom', offset: -5, style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
                     />
                     <YAxis 
-                      dataKey="weight"
                       stroke="#9CA3AF"
                       tick={{ fill: '#9CA3AF' }}
                       label={{ value: 'Weight (kg)', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
-                      domain={[25, 'dataMax']}
                     />
                     <Tooltip 
                       contentStyle={{ 
@@ -561,68 +530,6 @@ export default function Insights() {
           </Card>
         )}
 
-        {/* Sleep-Mood Correlation Scatter Plot */}
-        {sleepMoodData.length > 0 && (
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Brain className="h-5 w-5" />
-                Sleep Quality vs Next Day Mood
-              </CardTitle>
-              <p className="text-gray-400 text-sm">How your sleep quality affects your mood the next day</p>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart data={sleepMoodData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis 
-                      dataKey="sleepQuality" 
-                      stroke="#9CA3AF"
-                      tick={{ fill: '#9CA3AF' }}
-                      label={{ value: 'Sleep Quality (0-4)', position: 'insideBottom', offset: -5, style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
-                      domain={[0, 4]}
-                      type="number"
-                      allowDecimals={false}
-                    />
-                    <YAxis 
-                      dataKey="nextDayMood"
-                      stroke="#9CA3AF"
-                      tick={{ fill: '#9CA3AF' }}
-                      label={{ value: 'Next Day Mood (-2 to +2)', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
-                      domain={[-2, 2]}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: '#1F2937', 
-                        border: '1px solid #374151',
-                        borderRadius: '8px',
-                        color: '#F9FAFB'
-                      }}
-                      formatter={(value, name) => [
-                        name === 'nextDayMood' ? `Mood: ${value}` : `Sleep: ${value}/4`,
-                        name === 'nextDayMood' ? 'Next Day Mood' : 'Sleep Quality'
-                      ]}
-                    />
-                    <Scatter 
-                      dataKey="nextDayMood" 
-                      fill="#8B5CF6"
-                      fillOpacity={0.8}
-                      stroke="#A855F7"
-                      strokeWidth={2}
-                      r={6}
-                      name="Sleep-Mood"
-                    />
-                  </ScatterChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-4 text-sm text-gray-400">
-                <p>💡 Tip: Look for patterns - better sleep quality often correlates with improved mood!</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Morning & Evening Mood Bubble Pack Visualizations */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Morning Moods Bubble Pack */}
@@ -643,31 +550,34 @@ export default function Insights() {
                     const maxCount = Math.max(...morningMoodData.map(m => m.count));
                     const size = minSize + (moodData.count / maxCount) * (maxSize - minSize);
                     
-                    // Position bubbles with slight randomness but keep in view
-                    const top = Math.max(20, Math.min(280, 40 + Math.random() * 200));
-                    const left = Math.max(20, Math.min(280, 40 + Math.random() * 200));
+                    // Calculate position to create organic bubble layout
+                    const positions = [
+                      { x: 20, y: 20 }, { x: 60, y: 40 }, { x: 30, y: 60 },
+                      { x: 70, y: 25 }, { x: 45, y: 75 }, { x: 15, y: 80 },
+                      { x: 80, y: 60 }, { x: 25, y: 35 }
+                    ];
+                    const position = positions[index % positions.length];
                     
                     return (
-                      <div 
-                        key={`morning-${moodData.mood}`}
+                      <div
+                        key={index}
                         className="absolute group cursor-pointer transform transition-all duration-300 hover:scale-110"
                         style={{
+                          left: `${position.x}%`,
+                          top: `${position.y}%`,
                           width: `${size}px`,
                           height: `${size}px`,
-                          top: `${top - size/2}px`,
-                          left: `${left - size/2}px`,
-                          backgroundColor: moodData.color,
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: `${Math.max(16, Math.min(36, 16 + (size - minSize) / 2))}px`,
-                          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                          zIndex: 10 - index
+                          transform: `translate(-50%, -50%)`,
                         }}
                       >
-                        <div className="text-center">
-                          <div>{moodData.emoji}</div>
+                        <div
+                          className="w-full h-full rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300"
+                          style={{
+                            backgroundColor: moodData.color,
+                            fontSize: `${size * 0.3}px`,
+                          }}
+                        >
+                          {moodData.emoji}
                         </div>
                         <div className="absolute inset-0 rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white text-center">
@@ -708,31 +618,34 @@ export default function Insights() {
                     const maxCount = Math.max(...eveningMoodData.map(m => m.count));
                     const size = minSize + (moodData.count / maxCount) * (maxSize - minSize);
                     
-                    // Position bubbles with slight randomness but keep in view
-                    const top = Math.max(20, Math.min(280, 40 + Math.random() * 200));
-                    const left = Math.max(20, Math.min(280, 40 + Math.random() * 200));
+                    // Different positions for evening to create variety
+                    const positions = [
+                      { x: 30, y: 25 }, { x: 70, y: 35 }, { x: 20, y: 65 },
+                      { x: 80, y: 20 }, { x: 50, y: 70 }, { x: 25, y: 85 },
+                      { x: 75, y: 75 }, { x: 40, y: 40 }
+                    ];
+                    const position = positions[index % positions.length];
                     
                     return (
-                      <div 
-                        key={`evening-${moodData.mood}`}
+                      <div
+                        key={index}
                         className="absolute group cursor-pointer transform transition-all duration-300 hover:scale-110"
                         style={{
+                          left: `${position.x}%`,
+                          top: `${position.y}%`,
                           width: `${size}px`,
                           height: `${size}px`,
-                          top: `${top - size/2}px`,
-                          left: `${left - size/2}px`,
-                          backgroundColor: moodData.color,
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: `${Math.max(16, Math.min(36, 16 + (size - minSize) / 2))}px`,
-                          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                          zIndex: 10 - index
+                          transform: `translate(-50%, -50%)`,
                         }}
                       >
-                        <div className="text-center">
-                          <div>{moodData.emoji}</div>
+                        <div
+                          className="w-full h-full rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300"
+                          style={{
+                            backgroundColor: moodData.color,
+                            fontSize: `${size * 0.3}px`,
+                          }}
+                        >
+                          {moodData.emoji}
                         </div>
                         <div className="absolute inset-0 rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white text-center">
@@ -755,6 +668,74 @@ export default function Insights() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Sleep-Mood Correlation Scatter Plot */}
+        {sleepMoodData.length > 0 && (
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Brain className="h-5 w-5" />
+                Sleep Quality vs Next Day Mood
+              </CardTitle>
+              <p className="text-gray-400 text-sm">How your sleep quality affects your mood the next day</p>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={sleepMoodData.sort((a, b) => a.sleepQuality - b.sleepQuality)}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis 
+                      dataKey="sleepQuality" 
+                      stroke="#9CA3AF"
+                      tick={{ fill: '#9CA3AF' }}
+                      label={{ value: 'Sleep Quality (0-4)', position: 'insideBottom', offset: -5, style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
+                      domain={[0, 4]}
+                      type="number"
+                      allowDecimals={false}
+                    />
+                    <YAxis 
+                      dataKey="nextDayMood"
+                      stroke="#9CA3AF"
+                      tick={{ fill: '#9CA3AF' }}
+                      label={{ value: 'Next Day Mood (-2 to +2)', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
+                      domain={[-2, 2]}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#1F2937', 
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        color: '#F9FAFB'
+                      }}
+                      formatter={(value, name) => [
+                        name === 'nextDayMood' ? `Mood: ${value}` : `Sleep: ${value}/4`,
+                        name === 'nextDayMood' ? 'Next Day Mood' : 'Sleep Quality'
+                      ]}
+                    />
+                    <Area 
+                      type="monotone"
+                      dataKey="nextDayMood" 
+                      fill="#8B5CF6"
+                      stroke="#A855F7"
+                      strokeWidth={2}
+                      fillOpacity={0.4}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="nextDayMood" 
+                      stroke="#A855F7" 
+                      strokeWidth={3}
+                      dot={{ fill: '#8B5CF6', r: 6, strokeWidth: 2 }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 text-sm text-gray-400">
+                <p>💡 Tip: Look for patterns - better sleep quality often correlates with improved mood!</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Mood Intensity Heat Map Calendar */}
         <Card className="bg-gray-800 border-gray-700">
@@ -783,66 +764,42 @@ export default function Insights() {
                   const firstDayOfWeek = startOfMonth.getDay();
                   const dayIndex = index - firstDayOfWeek;
                   const currentDate = new Date(startOfMonth);
-                  currentDate.setDate(currentDate.getDate() + dayIndex);
-                  
-                  // Only show days in the current month
-                  const isCurrentMonth = currentDate.getMonth() === today.getMonth();
-                  
-                  if (!isCurrentMonth) {
-                    return <div key={`day-${index}`} className="p-2 rounded-lg bg-gray-800 opacity-40" />;
-                  }
+                  currentDate.setDate(startOfMonth.getDate() + dayIndex);
                   
                   const dateStr = currentDate.toISOString().split('T')[0];
                   const dayData = moodHeatMapData.find(d => d.date === dateStr);
-                  const hasData = dayData && (dayData.morningCount > 0 || dayData.eveningCount > 0);
                   
-                  // Color gradient for mood intensity
-                  let bgColor = 'bg-gray-700'; 
-                  let textColor = 'text-gray-400';
+                  const isCurrentMonth = currentDate.getMonth() === today.getMonth();
+                  const intensity = dayData?.intensity || 0;
+                  const morningCount = dayData?.morningCount || 0;
+                  const eveningCount = dayData?.eveningCount || 0;
                   
-                  if (hasData) {
-                    const intensity = dayData.intensity;
-                    if (intensity > 1) {
-                      bgColor = 'bg-green-800';
-                      textColor = 'text-white';
-                    } else if (intensity > 0.5) {
-                      bgColor = 'bg-green-700';
-                      textColor = 'text-white';
-                    } else if (intensity > 0) {
-                      bgColor = 'bg-green-600';
-                      textColor = 'text-white';
-                    } else if (intensity === 0) {
-                      bgColor = 'bg-gray-600';
-                      textColor = 'text-white';
-                    } else if (intensity > -0.5) {
-                      bgColor = 'bg-orange-600';
-                      textColor = 'text-white';
-                    } else if (intensity > -1) {
-                      bgColor = 'bg-red-600';
-                      textColor = 'text-white';
-                    } else {
-                      bgColor = 'bg-red-700';
-                      textColor = 'text-white';
-                    }
-                  }
+                  const getIntensityColor = (intensity: number) => {
+                    if (intensity === 0) return 'bg-gray-700';
+                    if (intensity >= 2) return 'bg-green-600';
+                    if (intensity >= 1) return 'bg-green-500';
+                    if (intensity >= 0) return 'bg-yellow-500';
+                    if (intensity >= -1) return 'bg-orange-500';
+                    return 'bg-red-500';
+                  };
+                  
+                  const tooltipText = isCurrentMonth 
+                    ? `${currentDate.toLocaleDateString()}\nAvg Mood: ${intensity.toFixed(1)}\nMorning entries: ${morningCount}\nEvening entries: ${eveningCount}`
+                    : '';
                   
                   return (
-                    <div 
-                      key={`day-${index}`}
-                      className={`p-2 rounded-lg ${bgColor} hover:opacity-80 transition-opacity relative cursor-pointer`}
+                    <div
+                      key={index}
+                      className={`
+                        aspect-square rounded-lg flex items-center justify-center text-xs font-medium relative
+                        ${isCurrentMonth ? getIntensityColor(intensity) : 'bg-gray-800'}
+                        ${isCurrentMonth && intensity !== 0 ? 'text-white' : 'text-gray-400'}
+                      `}
+                      title={tooltipText}
                     >
-                      <div className={`text-xs font-medium ${textColor}`}>
-                        {currentDate.getDate()}
-                      </div>
-                      {hasData && (
-                        <div className="flex justify-center mt-1 space-x-1">
-                          {dayData.morningCount > 0 && (
-                            <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full" />
-                          )}
-                          {dayData.eveningCount > 0 && (
-                            <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
-                          )}
-                        </div>
+                      {isCurrentMonth ? currentDate.getDate() : ''}
+                      {isCurrentMonth && (morningCount > 0 || eveningCount > 0) && (morningCount + eveningCount < 2) && (
+                        <div className="absolute top-0 right-0 w-1 h-1 bg-white rounded-full opacity-60"></div>
                       )}
                     </div>
                   );
@@ -850,27 +807,16 @@ export default function Insights() {
               </div>
               
               {/* Legend */}
-              <div className="flex items-center justify-center space-x-4 text-xs text-gray-400">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-red-700 rounded-sm mr-1" />
-                  <span>Very Negative</span>
+              <div className="flex items-center justify-center space-x-4 text-xs">
+                <span className="text-gray-400">Less positive</span>
+                <div className="flex space-x-1">
+                  <div className="w-3 h-3 bg-red-500 rounded"></div>
+                  <div className="w-3 h-3 bg-orange-500 rounded"></div>
+                  <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+                  <div className="w-3 h-3 bg-green-500 rounded"></div>
+                  <div className="w-3 h-3 bg-green-600 rounded"></div>
                 </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-orange-600 rounded-sm mr-1" />
-                  <span>Negative</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-gray-600 rounded-sm mr-1" />
-                  <span>Neutral</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-green-600 rounded-sm mr-1" />
-                  <span>Positive</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-green-800 rounded-sm mr-1" />
-                  <span>Very Positive</span>
-                </div>
+                <span className="text-gray-400">More positive</span>
               </div>
             </div>
           </CardContent>
@@ -880,7 +826,7 @@ export default function Insights() {
         <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-white flex items-center gap-2">
-              <Activity className="h-5 w-5" />
+              <Brain className="h-5 w-5" />
               Overall Mood Intensity (1-10)
             </CardTitle>
             <Button onClick={exportMoodChart} variant="outline" size="sm">
@@ -889,8 +835,8 @@ export default function Insights() {
             </Button>
           </CardHeader>
           <CardContent>
-            <div ref={moodChartRef} className="h-80">
-              {moodIntensityData.length > 0 ? (
+            {moodIntensityData.length > 0 ? (
+              <div ref={moodChartRef} className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={moodIntensityData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -932,23 +878,45 @@ export default function Insights() {
                     />
                   </LineChart>
                 </ResponsiveContainer>
-              ) : (
-                <div className="h-80 flex items-center justify-center bg-gray-700 rounded-lg">
-                  <p className="text-gray-400">No mood intensity data available</p>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex justify-center mt-4">
-              <div className="flex items-center text-sm text-gray-400 space-x-6">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                  <span>Morning</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                  <span>Evening</span>
-                </div>
+              </div>
+            ) : (
+              <div className="h-80 flex items-center justify-center bg-gray-700 rounded-lg">
+                <p className="text-gray-400">No mood intensity data available</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Trigger Events Export */}
+        <Card className="bg-gray-800 border-gray-700">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-white flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Trigger Events
+            </CardTitle>
+            <Button onClick={exportTriggersPDF} variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="text-2xl font-bold text-orange-400">{filteredTriggerEvents.length}</div>
+              <p className="text-gray-400">Total trigger events this month</p>
+              <div className="max-h-40 overflow-y-auto space-y-2">
+                {filteredTriggerEvents.slice(0, 5).map((trigger, index) => (
+                  <div key={index} className="p-2 bg-gray-700 rounded text-sm">
+                    <div className="font-medium text-orange-300">{trigger.eventSituation}</div>
+                    <div className="text-gray-400 text-xs">
+                      {new Date(trigger.createdAt || '').toLocaleDateString()}
+                    </div>
+                  </div>
+                ))}
+                {filteredTriggerEvents.length > 5 && (
+                  <div className="text-gray-400 text-sm text-center">
+                    +{filteredTriggerEvents.length - 5} more events
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
