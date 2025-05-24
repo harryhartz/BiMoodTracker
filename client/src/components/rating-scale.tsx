@@ -50,7 +50,7 @@ export default function RatingScale({
                 : "bg-slate-700 hover:" + colorClasses[color]
             }`}
           >
-            {rating > 0 ? `+${rating}` : rating}
+            {rating}
           </button>
         ))}
       </div>

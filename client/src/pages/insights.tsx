@@ -682,7 +682,7 @@ export default function Insights() {
             <CardContent>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart data={sleepMoodData}>
+                  <AreaChart data={sleepMoodData.sort((a, b) => a.sleepQuality - b.sleepQuality)}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis 
                       dataKey="sleepQuality" 
@@ -690,6 +690,8 @@ export default function Insights() {
                       tick={{ fill: '#9CA3AF' }}
                       label={{ value: 'Sleep Quality (0-4)', position: 'insideBottom', offset: -5, style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
                       domain={[0, 4]}
+                      type="number"
+                      allowDecimals={false}
                     />
                     <YAxis 
                       dataKey="nextDayMood"
@@ -710,15 +712,22 @@ export default function Insights() {
                         name === 'nextDayMood' ? 'Next Day Mood' : 'Sleep Quality'
                       ]}
                     />
-                    <Scatter 
+                    <Area 
+                      type="monotone"
                       dataKey="nextDayMood" 
                       fill="#8B5CF6"
-                      fillOpacity={0.8}
                       stroke="#A855F7"
                       strokeWidth={2}
-                      r={6}
+                      fillOpacity={0.4}
                     />
-                  </ScatterChart>
+                    <Line 
+                      type="monotone" 
+                      dataKey="nextDayMood" 
+                      stroke="#A855F7" 
+                      strokeWidth={3}
+                      dot={{ fill: '#8B5CF6', r: 6, strokeWidth: 2 }}
+                    />
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
               <div className="mt-4 text-sm text-gray-400">
