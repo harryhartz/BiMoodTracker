@@ -296,58 +296,151 @@ export default function Insights() {
     // Create PDF document with blue theme
     const doc = new jsPDF();
     
-    // Color definitions
+    // Color definitions aligned with the app's color palette using HSL values
+    // Convert HSL to RGB for PDF usage (jsPDF requires RGB)
+    const hslToRgb = (h, s, l) => {
+      s /= 100;
+      l /= 100;
+      const k = n => (n + h / 30) % 12;
+      const a = s * Math.min(l, 1 - l);
+      const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+      return [
+        Math.round(255 * f(0)),
+        Math.round(255 * f(8)),
+        Math.round(255 * f(4))
+      ];
+    };
+
     const colors = {
-      primary: [59, 130, 246],      // Blue primary color
-      secondary: [139, 92, 246],    // Purple secondary color
-      dark: [17, 24, 39],           // Dark background
-      light: [249, 250, 251],       // Light text
-      accent: [16, 185, 129],       // Green accent
-      border: [75, 85, 99],         // Border color
-      success: [34, 197, 94],       // Success color
-      warning: [234, 179, 8],       // Warning color
-      lightBg: [229, 231, 235]      // Light background
+      // From CSS variables in the app
+      primary: hslToRgb(207, 90, 54),          // --primary
+      secondary: hslToRgb(262, 83, 58),        // --chart-5 (purple)
+      dark: hslToRgb(240, 10, 3.9),            // --background
+      light: hslToRgb(0, 0, 98),               // --foreground
+      accent: hslToRgb(142, 76, 36),           // --chart-2 (green)
+      border: hslToRgb(240, 3.7, 15.9),        // --border
+      success: hslToRgb(142, 76, 36),          // Using chart-2 green
+      warning: hslToRgb(47, 96, 89),           // --chart-3 (amber)
+      alert: hslToRgb(15, 86, 30),             // --chart-4 (red)
+      muted: hslToRgb(240, 5, 64.9),           // --muted-foreground
+      lightBg: hslToRgb(240, 3.7, 15.9),       // --muted
+      card: hslToRgb(240, 10, 3.9),            // --card
     };
     
     // Add stylish header with color
-    // Header background
-    doc.setFillColor(...colors.primary);
-    doc.rect(0, 0, 210, 40, 'F');
+    // Header gradient background (simulated with multiple rectangles)
+    for (let i = 0; i < 40; i++) {
+      const blend = i / 40; // Blend factor from 0 to 1
+      const r = Math.round(colors.dark[0] * (1 - blend) + colors.primary[0] * blend);
+      const g = Math.round(colors.dark[1] * (1 - blend) + colors.primary[1] * blend);
+      const b = Math.round(colors.dark[2] * (1 - blend) + colors.primary[2] * blend);
+      doc.setFillColor(r, g, b);
+      doc.rect(0, i, 210, 1, 'F');
+    }
     
-    // Header text
-    doc.setTextColor(...colors.light);
+    // Add app branding "Mental Health Tracker" subtitle
+    doc.setTextColor(colors.light[0], colors.light[1], colors.light[2]);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'italic');
+    doc.text('Mental Health Tracker', 105, 16, { align: 'center' });
+    
+    // Header title with lighter color
+    doc.setTextColor(colors.light[0], colors.light[1], colors.light[2]);
     doc.setFontSize(26);
     doc.setFont('helvetica', 'bold');
-    doc.text('Trigger Events Report', 105, 25, { align: 'center' });
+    doc.text('Trigger Events Report', 105, 28, { align: 'center' });
     
-    // Add decorative element
-    doc.setDrawColor(...colors.light);
+    // Add decorative elements - curved line
+    doc.setDrawColor(colors.light[0], colors.light[1], colors.light[2]);
     doc.setLineWidth(0.5);
-    doc.line(40, 35, 170, 35);
     
-    // Add logo/icon placeholder
-    doc.setFillColor(...colors.light);
+    // Draw a curved decorative line
+    const startX = 40;
+    const endX = 170;
+    const y = 35;
+    const points = 30;
+    const amplitude = 1;
+    
+    for (let i = 0; i < points - 1; i++) {
+      const x1 = startX + (endX - startX) * (i / points);
+      const x2 = startX + (endX - startX) * ((i + 1) / points);
+      const offset1 = amplitude * Math.sin((i / points) * Math.PI * 2);
+      const offset2 = amplitude * Math.sin(((i + 1) / points) * Math.PI * 2);
+      doc.line(x1, y + offset1, x2, y + offset2);
+    }
+    
+    // Add logo/icon (brain symbol for mental health)
+    doc.setFillColor(colors.light[0], colors.light[1], colors.light[2]);
     doc.circle(30, 20, 8, 'F');
-    doc.setFillColor(...colors.primary);
-    doc.setDrawColor(...colors.light);
+    
+    // Brain icon (simplified)
+    doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+    doc.setDrawColor(colors.light[0], colors.light[1], colors.light[2]);
     doc.setLineWidth(0.2);
     doc.circle(30, 20, 5, 'FD');
     
-    // Report info section with background
-    doc.setFillColor(...colors.lightBg);
-    doc.rect(20, 45, 170, 20, 'F');
+    // Draw brain curves
+    doc.setDrawColor(colors.light[0], colors.light[1], colors.light[2]);
+    doc.setLineWidth(0.3);
+    doc.line(28, 17, 28, 23);
+    doc.line(32, 17, 32, 23);
+    doc.line(26, 20, 34, 20);
     
-    // Add border to info section
-    doc.setDrawColor(...colors.border);
+    // Report info section with dark gradient background
+    const infoY = 45;
+    const infoHeight = 25;
+    
+    // Draw glass-like panel with app-styled background
+    doc.setFillColor(colors.dark[0], colors.dark[1], colors.dark[2]);
+    doc.roundedRect(20, infoY, 170, infoHeight, 3, 3, 'F');
+    
+    // Add subtle inner highlight
+    doc.setDrawColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(20, infoY, 170, infoHeight, 3, 3, 'S');
+    
+    // Add inner border glow effect
+    doc.setDrawColor(colors.primary[0], colors.primary[1], colors.primary[2], 0.5);
     doc.setLineWidth(0.2);
-    doc.rect(20, 45, 170, 20, 'S');
+    doc.roundedRect(21, infoY + 1, 168, infoHeight - 2, 2, 2, 'S');
     
-    // Report metadata
-    doc.setTextColor(...colors.dark);
+    // Report metadata with icon indicators
+    doc.setTextColor(colors.light[0], colors.light[1], colors.light[2]);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 30, 55);
-    doc.text(`Total Events: ${filteredTriggerEvents.length}`, 30, 62);
+    
+    // Calendar icon (date)
+    doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+    doc.roundedRect(25, infoY + 7, 6, 6, 1, 1, 'F');
+    doc.setFillColor(colors.dark[0], colors.dark[1], colors.dark[2]);
+    doc.roundedRect(26, infoY + 8, 4, 2, 0, 0, 'F');
+    
+    // Generated date
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 35, infoY + 12);
+    
+    // List icon (events count)
+    doc.setFillColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+    doc.roundedRect(25, infoY + 16, 6, 6, 1, 1, 'F');
+    doc.setFillColor(colors.light[0], colors.light[1], colors.light[2]);
+    doc.rect(27, infoY + 17, 2, 1, 'F');
+    doc.rect(27, infoY + 19, 2, 1, 'F');
+    doc.rect(27, infoY + 21, 2, 1, 'F');
+    
+    // Event count with highlight for zero/many events
+    const eventCount = filteredTriggerEvents.length;
+    let countColor;
+    
+    if (eventCount === 0) {
+      countColor = colors.alert; // Red for no events
+    } else if (eventCount > 5) {
+      countColor = colors.accent; // Green for many events
+    } else {
+      countColor = colors.light; // Default color
+    }
+    
+    doc.text("Total Events:", 35, infoY + 20);
+    doc.setTextColor(countColor[0], countColor[1], countColor[2]);
+    doc.text(`${eventCount}`, 75, infoY + 20);
     
     let yPosition = 75;
     const pageHeight = 270;
@@ -356,23 +449,47 @@ export default function Insights() {
     const textWidth = rightMargin - leftMargin;
     
     // Apply branded footer to all pages
-    const applyFooter = (pageNum) => {
+    const applyFooter = (pageNum: number) => {
       doc.setPage(pageNum);
       
-      // Footer line
-      doc.setDrawColor(...colors.primary);
-      doc.setLineWidth(0.5);
-      doc.line(20, 280, 190, 280);
+      // Footer background
+      doc.setFillColor(colors.dark[0], colors.dark[1], colors.dark[2]);
+      doc.rect(0, 275, 210, 22, 'F');
+      
+      // Footer accent line
+      doc.setDrawColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+      doc.setLineWidth(0.8);
+      doc.line(20, 278, 190, 278);
+      
+      // Footer subline
+      doc.setDrawColor(colors.secondary[0], colors.secondary[1], colors.secondary[2]);
+      doc.setLineWidth(0.2);
+      doc.line(20, 279, 190, 279);
+      
+      // Footer logo
+      doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+      doc.circle(30, 284, 4, 'F');
+      doc.setFillColor(colors.dark[0], colors.dark[1], colors.dark[2]);
+      doc.circle(30, 284, 2, 'F');
       
       // Footer text
-      doc.setFillColor(...colors.primary);
-      doc.setTextColor(...colors.primary);
+      doc.setTextColor(colors.light[0], colors.light[1], colors.light[2]);
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
-      doc.text('Mental Health Tracker - Confidential Report', 20, 286);
+      doc.text('Mental Health Tracker - Confidential Report', 38, 285);
       
-      // Page numbers
-      doc.text(`Page ${pageNum}`, 185, 286, { align: 'right' });
+      // Date in footer
+      doc.setFontSize(7);
+      doc.setTextColor(colors.muted[0], colors.muted[1], colors.muted[2]);
+      doc.text(`Generated ${new Date().toLocaleDateString()}`, 38, 290);
+      
+      // Page numbers with accent box
+      doc.setFillColor(colors.primary[0], colors.primary[1], colors.primary[2]);
+      doc.roundedRect(170, 282, 20, 6, 1, 1, 'F');
+      doc.setTextColor(colors.light[0], colors.light[1], colors.light[2]);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Page ${pageNum}`, 180, 286, { align: 'center' });
     };
     
     // Process each trigger event
