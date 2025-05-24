@@ -295,107 +295,127 @@ export default function Insights() {
   const exportTriggersPDF = () => {
     const doc = new jsPDF();
     
-    // Clean header
-    doc.setFontSize(18);
+    // Professional header with better spacing
+    doc.setFontSize(22);
     doc.setFont(undefined, 'bold');
-    doc.text('Trigger Events Report', 20, 30);
+    doc.text('Trigger Events Report', 105, 25, { align: 'center' });
     
-    doc.setFontSize(11);
+    // Header line
+    doc.setLineWidth(0.5);
+    doc.line(30, 35, 180, 35);
+    
+    // Report info
+    doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 45);
-    doc.text(`Total Events: ${filteredTriggerEvents.length}`, 20, 55);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 30, 45);
+    doc.text(`Total Events: ${filteredTriggerEvents.length}`, 30, 52);
     
-    let yPosition = 75;
-    const pageHeight = 270;
-    const leftMargin = 20;
-    const rightMargin = 170;
+    let yPosition = 70;
+    const pageHeight = 260;
+    const leftMargin = 30;
+    const rightMargin = 180;
+    const textWidth = rightMargin - leftMargin;
     
     filteredTriggerEvents.forEach((trigger, index) => {
       // Check if we need a new page
-      if (yPosition > pageHeight - 50) {
+      if (yPosition > pageHeight - 60) {
         doc.addPage();
-        yPosition = 20;
+        yPosition = 30;
       }
       
-      // Event number and date
+      // Event header with background
+      doc.setFillColor(245, 245, 245);
+      doc.rect(leftMargin - 5, yPosition - 3, textWidth + 10, 12, 'F');
+      
       doc.setFontSize(12);
       doc.setFont(undefined, 'bold');
-      doc.text(`Event ${index + 1}`, leftMargin, yPosition);
-      doc.setFont(undefined, 'normal');
-      doc.text(`${new Date(trigger.createdAt || '').toLocaleDateString()}`, leftMargin + 50, yPosition);
-      yPosition += 8;
-      
-      // Simple line
-      doc.setLineWidth(0.3);
-      doc.line(leftMargin, yPosition, rightMargin, yPosition);
-      yPosition += 8;
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Event ${index + 1}`, leftMargin, yPosition + 4);
+      doc.text(`${new Date(trigger.createdAt || '').toLocaleDateString()}`, rightMargin - 30, yPosition + 4);
+      yPosition += 18;
       
       // Situation
-      doc.setFont(undefined, 'bold');
       doc.setFontSize(10);
+      doc.setFont(undefined, 'bold');
       doc.text('Situation:', leftMargin, yPosition);
-      yPosition += 5;
+      yPosition += 6;
       
       doc.setFont(undefined, 'normal');
-      const situationLines = doc.splitTextToSize(trigger.eventSituation, rightMargin - leftMargin);
-      doc.text(situationLines, leftMargin, yPosition);
-      yPosition += situationLines.length * 5 + 8;
+      doc.setFontSize(9);
+      const situationLines = doc.splitTextToSize(trigger.eventSituation, textWidth - 5);
+      doc.text(situationLines, leftMargin + 3, yPosition);
+      yPosition += situationLines.length * 4 + 8;
       
-      // Emotions (simple text only)
+      // Emotions in a more compact format
       if (trigger.emotions.length > 0) {
         doc.setFont(undefined, 'bold');
+        doc.setFontSize(10);
         doc.text('Emotions:', leftMargin, yPosition);
-        yPosition += 5;
         
         doc.setFont(undefined, 'normal');
+        doc.setFontSize(9);
         const emotions = trigger.emotions.map(emotion => {
           const emotionData = EMOTION_OPTIONS.find(e => e.value === emotion);
           return emotionData ? emotionData.label : emotion;
         }).join(', ');
         
-        const emotionLines = doc.splitTextToSize(emotions, rightMargin - leftMargin);
-        doc.text(emotionLines, leftMargin, yPosition);
-        yPosition += emotionLines.length * 5 + 8;
+        const emotionLines = doc.splitTextToSize(emotions, textWidth - 50);
+        doc.text(emotionLines, leftMargin + 50, yPosition);
+        yPosition += Math.max(emotionLines.length * 4, 6) + 6;
       }
       
       // Action taken
       if (trigger.actionTaken) {
         doc.setFont(undefined, 'bold');
-        doc.text('Action Taken:', leftMargin, yPosition);
-        yPosition += 5;
+        doc.setFontSize(10);
+        doc.text('Action:', leftMargin, yPosition);
+        yPosition += 6;
         
         doc.setFont(undefined, 'normal');
-        const actionLines = doc.splitTextToSize(trigger.actionTaken, rightMargin - leftMargin);
-        doc.text(actionLines, leftMargin, yPosition);
-        yPosition += actionLines.length * 5 + 8;
+        doc.setFontSize(9);
+        const actionLines = doc.splitTextToSize(trigger.actionTaken, textWidth - 5);
+        doc.text(actionLines, leftMargin + 3, yPosition);
+        yPosition += actionLines.length * 4 + 8;
       }
       
       // Consequences
       if (trigger.consequences.length > 0 && trigger.consequences.some(c => c.trim())) {
         doc.setFont(undefined, 'bold');
+        doc.setFontSize(10);
         doc.text('Consequences:', leftMargin, yPosition);
-        yPosition += 5;
+        yPosition += 6;
         
         doc.setFont(undefined, 'normal');
+        doc.setFontSize(9);
         trigger.consequences.forEach(consequence => {
           if (consequence.trim()) {
-            const consequenceLines = doc.splitTextToSize(`- ${consequence}`, rightMargin - leftMargin);
-            doc.text(consequenceLines, leftMargin, yPosition);
-            yPosition += consequenceLines.length * 5 + 2;
+            const consequenceLines = doc.splitTextToSize(`• ${consequence}`, textWidth - 5);
+            doc.text(consequenceLines, leftMargin + 3, yPosition);
+            yPosition += consequenceLines.length * 4 + 3;
           }
         });
-        yPosition += 6;
+        yPosition += 5;
       }
       
-      // Duration
+      // Duration and spacing
       const duration = trigger.endDate 
         ? `${Math.ceil((new Date(trigger.endDate).getTime() - new Date(trigger.startDate).getTime()) / (1000 * 60 * 60 * 24))} days`
         : 'Ongoing';
       
       doc.setFont(undefined, 'bold');
+      doc.setFontSize(9);
       doc.text(`Duration: ${duration}`, leftMargin, yPosition);
-      yPosition += 15;
+      yPosition += 20;
     });
+
+    // Add page numbers
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'normal');
+      doc.text(`Page ${i} of ${pageCount}`, 105, 285, { align: 'center' });
+    }
 
     doc.save('trigger-events-report.pdf');
   };
