@@ -10,8 +10,8 @@ interface RatingScaleProps {
 export default function RatingScale({ 
   value, 
   onChange, 
-  max = 5, 
-  min = 1,
+  max = 4, 
+  min = 0,
   label,
   color = "primary"
 }: RatingScaleProps) {

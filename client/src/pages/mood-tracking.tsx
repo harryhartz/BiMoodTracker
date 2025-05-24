@@ -194,9 +194,11 @@ export default function MoodTracking() {
                       <FormItem>
                         <FormControl>
                           <RatingScale
-                            label="Sleep Quality (from last night)"
+                            label="Sleep Quality (0-4)"
                             value={field.value}
                             onChange={field.onChange}
+                            min={0}
+                            max={4}
                             color="accent"
                           />
                         </FormControl>
@@ -260,9 +262,11 @@ export default function MoodTracking() {
                       <FormItem>
                         <FormControl>
                           <RatingScale
-                            label="Energy Level"
+                            label="Energy Level (0-4)"
                             value={field.value}
                             onChange={field.onChange}
+                            min={0}
+                            max={4}
                             color="secondary"
                           />
                         </FormControl>
