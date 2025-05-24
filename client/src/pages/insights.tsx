@@ -293,128 +293,317 @@ export default function Insights() {
   };
 
   const exportTriggersPDF = () => {
+    // Create PDF document with blue theme
     const doc = new jsPDF();
     
-    // Professional header with better spacing
-    doc.setFontSize(22);
-    doc.setFont(undefined, 'bold');
+    // Color definitions
+    const colors = {
+      primary: [59, 130, 246],      // Blue primary color
+      secondary: [139, 92, 246],    // Purple secondary color
+      dark: [17, 24, 39],           // Dark background
+      light: [249, 250, 251],       // Light text
+      accent: [16, 185, 129],       // Green accent
+      border: [75, 85, 99],         // Border color
+      success: [34, 197, 94],       // Success color
+      warning: [234, 179, 8],       // Warning color
+      lightBg: [229, 231, 235]      // Light background
+    };
+    
+    // Add stylish header with color
+    // Header background
+    doc.setFillColor(...colors.primary);
+    doc.rect(0, 0, 210, 40, 'F');
+    
+    // Header text
+    doc.setTextColor(...colors.light);
+    doc.setFontSize(26);
+    doc.setFont('helvetica', 'bold');
     doc.text('Trigger Events Report', 105, 25, { align: 'center' });
     
-    // Header line
+    // Add decorative element
+    doc.setDrawColor(...colors.light);
     doc.setLineWidth(0.5);
-    doc.line(30, 35, 180, 35);
+    doc.line(40, 35, 170, 35);
     
-    // Report info
+    // Add logo/icon placeholder
+    doc.setFillColor(...colors.light);
+    doc.circle(30, 20, 8, 'F');
+    doc.setFillColor(...colors.primary);
+    doc.setDrawColor(...colors.light);
+    doc.setLineWidth(0.2);
+    doc.circle(30, 20, 5, 'FD');
+    
+    // Report info section with background
+    doc.setFillColor(...colors.lightBg);
+    doc.rect(20, 45, 170, 20, 'F');
+    
+    // Add border to info section
+    doc.setDrawColor(...colors.border);
+    doc.setLineWidth(0.2);
+    doc.rect(20, 45, 170, 20, 'S');
+    
+    // Report metadata
+    doc.setTextColor(...colors.dark);
     doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 30, 45);
-    doc.text(`Total Events: ${filteredTriggerEvents.length}`, 30, 52);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 30, 55);
+    doc.text(`Total Events: ${filteredTriggerEvents.length}`, 30, 62);
     
-    let yPosition = 70;
-    const pageHeight = 260;
-    const leftMargin = 30;
-    const rightMargin = 180;
+    let yPosition = 75;
+    const pageHeight = 270;
+    const leftMargin = 25;
+    const rightMargin = 185;
     const textWidth = rightMargin - leftMargin;
     
+    // Apply branded footer to all pages
+    const applyFooter = (pageNum) => {
+      doc.setPage(pageNum);
+      
+      // Footer line
+      doc.setDrawColor(...colors.primary);
+      doc.setLineWidth(0.5);
+      doc.line(20, 280, 190, 280);
+      
+      // Footer text
+      doc.setFillColor(...colors.primary);
+      doc.setTextColor(...colors.primary);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Mental Health Tracker - Confidential Report', 20, 286);
+      
+      // Page numbers
+      doc.text(`Page ${pageNum}`, 185, 286, { align: 'right' });
+    };
+    
+    // Process each trigger event
     filteredTriggerEvents.forEach((trigger, index) => {
       // Check if we need a new page
       if (yPosition > pageHeight - 60) {
         doc.addPage();
-        yPosition = 30;
+        applyFooter(doc.getNumberOfPages());
+        yPosition = 20;
       }
       
-      // Event header with background
-      doc.setFillColor(245, 245, 245);
+      // Event header with gradient-like background
+      doc.setFillColor(...colors.secondary.map(c => c * 0.3));
       doc.rect(leftMargin - 5, yPosition - 3, textWidth + 10, 12, 'F');
       
+      // Add border to event header
+      doc.setDrawColor(...colors.secondary);
+      doc.setLineWidth(0.2);
+      doc.rect(leftMargin - 5, yPosition - 3, textWidth + 10, 12, 'S');
+      
+      // Event title
       doc.setFontSize(12);
-      doc.setFont(undefined, 'bold');
-      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colors.dark);
       doc.text(`Event ${index + 1}`, leftMargin, yPosition + 4);
-      doc.text(`${new Date(trigger.createdAt || '').toLocaleDateString()}`, rightMargin - 30, yPosition + 4);
+      
+      // Event date
+      const eventDate = trigger.createdAt ? new Date(trigger.createdAt).toLocaleDateString() : 'No date';
+      doc.setFontSize(9);
+      doc.text(eventDate, rightMargin - 20, yPosition + 4, { align: 'right' });
       yPosition += 18;
       
-      // Situation
+      // Section: Situation with colored background
+      doc.setFillColor(...colors.lightBg);
+      doc.rect(leftMargin - 3, yPosition - 3, textWidth + 6, 6, 'F');
+      
       doc.setFontSize(10);
-      doc.setFont(undefined, 'bold');
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colors.primary);
       doc.text('Situation:', leftMargin, yPosition);
-      yPosition += 6;
+      yPosition += 8;
       
-      doc.setFont(undefined, 'normal');
+      // Situation content with a subtle box
+      doc.setDrawColor(...colors.border);
+      doc.setLineWidth(0.1);
+      
+      // Calculate height needed for situation text
+      const situationLines = doc.splitTextToSize(trigger.eventSituation, textWidth - 10);
+      const situationHeight = situationLines.length * 4 + 6;
+      
+      // Draw content box
+      doc.setFillColor(252, 252, 253);
+      doc.roundedRect(leftMargin, yPosition - 4, textWidth, situationHeight, 1, 1, 'F');
+      doc.roundedRect(leftMargin, yPosition - 4, textWidth, situationHeight, 1, 1, 'S');
+      
+      // Situation text
+      doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
-      const situationLines = doc.splitTextToSize(trigger.eventSituation, textWidth - 5);
+      doc.setTextColor(...colors.dark);
       doc.text(situationLines, leftMargin + 3, yPosition);
-      yPosition += situationLines.length * 4 + 8;
+      yPosition += situationHeight + 6;
       
-      // Emotions in a more compact format
+      // Section: Emotions with colored badges
       if (trigger.emotions.length > 0) {
-        doc.setFont(undefined, 'bold');
         doc.setFontSize(10);
-        doc.text('Emotions:', leftMargin, yPosition);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colors.primary);
         
-        doc.setFont(undefined, 'normal');
-        doc.setFontSize(9);
+        // Emotions header with background
+        doc.setFillColor(...colors.lightBg);
+        doc.rect(leftMargin - 3, yPosition - 3, textWidth + 6, 6, 'F');
+        doc.text('Emotions:', leftMargin, yPosition);
+        yPosition += 8;
+        
+        // Emotions as colored badges
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        
+        let emotionX = leftMargin;
         const emotions = trigger.emotions.map(emotion => {
           const emotionData = EMOTION_OPTIONS.find(e => e.value === emotion);
           return emotionData ? emotionData.label : emotion;
-        }).join(', ');
-        
-        const emotionLines = doc.splitTextToSize(emotions, textWidth - 50);
-        doc.text(emotionLines, leftMargin + 50, yPosition);
-        yPosition += Math.max(emotionLines.length * 4, 6) + 6;
-      }
-      
-      // Action taken
-      if (trigger.actionTaken) {
-        doc.setFont(undefined, 'bold');
-        doc.setFontSize(10);
-        doc.text('Action:', leftMargin, yPosition);
-        yPosition += 6;
-        
-        doc.setFont(undefined, 'normal');
-        doc.setFontSize(9);
-        const actionLines = doc.splitTextToSize(trigger.actionTaken, textWidth - 5);
-        doc.text(actionLines, leftMargin + 3, yPosition);
-        yPosition += actionLines.length * 4 + 8;
-      }
-      
-      // Consequences
-      if (trigger.consequences.length > 0 && trigger.consequences.some(c => c.trim())) {
-        doc.setFont(undefined, 'bold');
-        doc.setFontSize(10);
-        doc.text('Consequences:', leftMargin, yPosition);
-        yPosition += 6;
-        
-        doc.setFont(undefined, 'normal');
-        doc.setFontSize(9);
-        trigger.consequences.forEach(consequence => {
-          if (consequence.trim()) {
-            const consequenceLines = doc.splitTextToSize(`• ${consequence}`, textWidth - 5);
-            doc.text(consequenceLines, leftMargin + 3, yPosition);
-            yPosition += consequenceLines.length * 4 + 3;
-          }
         });
-        yPosition += 5;
+        
+        // Calculate how many emotions will fit per row
+        const maxWidth = 25;
+        const emotionsPerRow = Math.floor(textWidth / maxWidth);
+        
+        for (let i = 0; i < emotions.length; i++) {
+          const emotion = emotions[i];
+          
+          // New row if needed
+          if (i > 0 && i % emotionsPerRow === 0) {
+            emotionX = leftMargin;
+            yPosition += 10;
+          }
+          
+          // Randomize badge colors slightly
+          const colorIndex = i % 3;
+          const badgeColors = [
+            colors.primary,
+            colors.secondary,
+            colors.accent
+          ];
+          
+          // Draw emotion badge
+          doc.setFillColor(...badgeColors[colorIndex].map(c => c * 0.7));
+          const badgeWidth = Math.min(emotion.length * 2 + 10, maxWidth);
+          doc.roundedRect(emotionX, yPosition - 5, badgeWidth, 7, 1, 1, 'F');
+          
+          // Emotion text
+          doc.setTextColor(255, 255, 255);
+          doc.text(emotion, emotionX + badgeWidth/2, yPosition - 1, { align: 'center' });
+          
+          emotionX += badgeWidth + 5;
+        }
+        
+        yPosition += 10;
       }
       
-      // Duration and spacing
-      const duration = trigger.endDate 
-        ? `${Math.ceil((new Date(trigger.endDate).getTime() - new Date(trigger.startDate).getTime()) / (1000 * 60 * 60 * 24))} days`
-        : 'Ongoing';
+      // Section: Action taken
+      if (trigger.actionTaken) {
+        doc.setFillColor(...colors.lightBg);
+        doc.rect(leftMargin - 3, yPosition - 3, textWidth + 6, 6, 'F');
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colors.primary);
+        doc.text('Action Taken:', leftMargin, yPosition);
+        yPosition += 8;
+        
+        // Calculate height needed for action text
+        const actionLines = doc.splitTextToSize(trigger.actionTaken, textWidth - 10);
+        const actionHeight = actionLines.length * 4 + 6;
+        
+        // Draw content box
+        doc.setFillColor(252, 252, 253);
+        doc.setDrawColor(...colors.border);
+        doc.roundedRect(leftMargin, yPosition - 4, textWidth, actionHeight, 1, 1, 'F');
+        doc.roundedRect(leftMargin, yPosition - 4, textWidth, actionHeight, 1, 1, 'S');
+        
+        // Action text
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.dark);
+        doc.text(actionLines, leftMargin + 3, yPosition);
+        yPosition += actionHeight + 6;
+      }
       
-      doc.setFont(undefined, 'bold');
-      doc.setFontSize(9);
-      doc.text(`Duration: ${duration}`, leftMargin, yPosition);
-      yPosition += 20;
+      // Section: Consequences with colored icons
+      if (trigger.consequences.length > 0 && trigger.consequences.some(c => c.trim())) {
+        doc.setFillColor(...colors.lightBg);
+        doc.rect(leftMargin - 3, yPosition - 3, textWidth + 6, 6, 'F');
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colors.primary);
+        doc.text('Consequences:', leftMargin, yPosition);
+        yPosition += 8;
+        
+        // Draw box around all consequences
+        const consequenceItems = trigger.consequences.filter(c => c.trim());
+        let totalConsequencesHeight = 0;
+        
+        // Calculate total height needed
+        consequenceItems.forEach(consequence => {
+          const consequenceLines = doc.splitTextToSize(consequence, textWidth - 15);
+          totalConsequencesHeight += consequenceLines.length * 4 + 5;
+        });
+        
+        // Draw content box
+        doc.setFillColor(252, 252, 253);
+        doc.setDrawColor(...colors.border);
+        doc.roundedRect(leftMargin, yPosition - 4, textWidth, totalConsequencesHeight + 2, 1, 1, 'F');
+        doc.roundedRect(leftMargin, yPosition - 4, textWidth, totalConsequencesHeight + 2, 1, 1, 'S');
+        
+        // Add each consequence with an icon
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.dark);
+        
+        consequenceItems.forEach((consequence, i) => {
+          // Draw colored bullet
+          doc.setFillColor(...colors.secondary);
+          doc.circle(leftMargin + 4, yPosition, 1.5, 'F');
+          
+          // Consequence text
+          const consequenceLines = doc.splitTextToSize(consequence, textWidth - 15);
+          doc.text(consequenceLines, leftMargin + 8, yPosition);
+          yPosition += consequenceLines.length * 4 + 5;
+        });
+        
+        yPosition += 3;
+      }
+      
+      // Duration info with color coding
+      const duration = trigger.endDate 
+        ? Math.ceil((new Date(trigger.endDate).getTime() - new Date(trigger.startDate).getTime()) / (1000 * 60 * 60 * 24))
+        : null;
+      
+      const durationText = duration ? `${duration} days` : 'Ongoing';
+      const durationColor = !duration ? colors.warning : 
+                           duration <= 3 ? colors.success : 
+                           duration <= 7 ? colors.primary : 
+                           colors.secondary;
+      
+      // Duration badge
+      doc.setFillColor(...durationColor);
+      doc.roundedRect(leftMargin, yPosition - 5, 50, 7, 1, 1, 'F');
+      
+      // Duration text
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(255, 255, 255);
+      doc.text(`Duration: ${durationText}`, leftMargin + 25, yPosition - 1, { align: 'center' });
+      
+      // Add spacing before next event
+      yPosition += 15;
+      
+      // Add a divider line
+      doc.setDrawColor(...colors.border);
+      doc.setLineWidth(0.2);
+      doc.line(leftMargin, yPosition - 5, rightMargin, yPosition - 5);
+      
+      yPosition += 10;
     });
 
-    // Add page numbers
+    // Apply footer to all pages
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setFont(undefined, 'normal');
-      doc.text(`Page ${i} of ${pageCount}`, 105, 285, { align: 'center' });
+      applyFooter(i);
     }
 
     doc.save('trigger-events-report.pdf');
