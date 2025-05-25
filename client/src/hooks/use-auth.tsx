@@ -1,7 +1,3 @@
-` tags.
-
-```python
-<replit_final_file>
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -41,12 +37,12 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     // Check if user is logged in from localStorage
     const storedToken = localStorage.getItem('auth_token');
     const storedUser = localStorage.getItem('auth_user');
-
+    
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
     }
-
+    
     setIsLoading(false);
   }, []);
 
@@ -54,9 +50,9 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     try {
       setIsLoading(true);
       setError(null);
-
+      
       const data = await apiRequest<AuthResponse>('POST', '/api/auth/login', { email, password });
-
+      
       // Save to state
       setUser({
         id: data.id,
@@ -64,7 +60,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
         email: data.email
       });
       setToken(data.token);
-
+      
       // Save to localStorage
       localStorage.setItem('auth_token', data.token);
       localStorage.setItem('auth_user', JSON.stringify({
@@ -72,7 +68,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
         name: data.name,
         email: data.email
       }));
-
+      
     } catch (err: any) {
       setError(err.message || 'Failed to login. Please check your credentials.');
       throw err;
@@ -85,13 +81,13 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     try {
       setIsLoading(true);
       setError(null);
-
+      
       const data = await apiRequest<AuthResponse>('POST', '/api/auth/signup', { 
         name, 
         email, 
         password 
       });
-
+      
       // Save to state
       setUser({
         id: data.id,
@@ -99,7 +95,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
         email: data.email
       });
       setToken(data.token);
-
+      
       // Save to localStorage
       localStorage.setItem('auth_token', data.token);
       localStorage.setItem('auth_user', JSON.stringify({
@@ -107,7 +103,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
         name: data.name,
         email: data.email
       }));
-
+      
     } catch (err: any) {
       setError(err.message || 'Failed to create account. Please try again.');
       throw err;
@@ -120,7 +116,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     // Clear from state
     setUser(null);
     setToken(null);
-
+    
     // Clear from localStorage
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_user');

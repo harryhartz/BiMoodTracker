@@ -34,11 +34,7 @@ export default function Thoughts() {
 
   const { data: thoughts = [] } = useQuery<Thought[]>({
     queryKey: ['/api/thoughts'],
-    queryFn: async () => {
-      const res = await fetch('/api/thoughts');
-      const data = await res.json();
-      return Array.isArray(data) ? data : [];
-    },
+    queryFn: () => fetch('/api/thoughts').then(res => res.json()),
   });
 
   const createThought = useMutation({
