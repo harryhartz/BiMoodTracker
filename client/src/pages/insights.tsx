@@ -234,9 +234,22 @@ export default function Insights() {
     
     const heatMapData: { date: string; intensity: number; dayOfWeek: number; weekOfMonth: number; morningCount: number; eveningCount: number }[] = [];
     
+    // Helper function to format date consistently
+    const formatDateToYYYYMMDD = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
     for (let d = new Date(startOfMonth); d <= endOfMonth; d.setDate(d.getDate() + 1)) {
-      const dateStr = d.toISOString().split('T')[0];
-      const dayEntries = filteredMoodEntries.filter(entry => entry.date === dateStr);
+      const dateStr = formatDateToYYYYMMDD(d);
+      
+      // Find entries for this day by comparing just the date portion
+      const dayEntries = filteredMoodEntries.filter(entry => {
+        // Ensure both dates are in the same format (YYYY-MM-DD)
+        return entry.date === dateStr;
+      });
       
       // Count morning and evening entries separately
       const morningEntries = dayEntries.filter(entry => entry.timeOfDay === 'morning');
@@ -256,6 +269,9 @@ export default function Insights() {
         eveningCount: eveningEntries.length
       });
     }
+    
+    console.log('Mood entries:', filteredMoodEntries.length);
+    console.log('Heat map data:', heatMapData);
     
     return heatMapData;
   }, [filteredMoodEntries]);
