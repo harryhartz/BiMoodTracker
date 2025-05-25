@@ -9,7 +9,6 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { EMOTION_OPTIONS } from "@/lib/constants";
-import { exportTriggersPDF } from "../pdf-export";
 import type { MoodEntry, TriggerEvent, Thought, Medication } from "@shared/schema";
 
 // Helper function to get emoji for mood
@@ -309,7 +308,7 @@ export default function Insights() {
     }
   };
 
-  const exportTriggersPDF = () => {
+  const exportTriggersPDF = (triggerEvents = filteredTriggerEvents) => {
     // Create professional PDF document
     const doc = new jsPDF();
     
@@ -392,8 +391,8 @@ export default function Insights() {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     
-    let emotionCounts = {};
-    filteredTriggerEvents.forEach(event => {
+    let emotionCounts: Record<string, number> = {};
+    triggerEvents.forEach(event => {
       event.emotions.forEach(emotion => {
         emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1;
       });
@@ -1220,7 +1219,7 @@ export default function Insights() {
               <FileText className="h-5 w-5" />
               Trigger Events
             </CardTitle>
-            <Button onClick={exportTriggersPDF} variant="outline" size="sm">
+            <Button onClick={() => exportTriggersPDF()} variant="outline" size="sm">
               <Download className="h-4 w-4 mr-2" />
               Export PDF
             </Button>
