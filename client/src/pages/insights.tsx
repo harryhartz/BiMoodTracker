@@ -312,122 +312,160 @@ export default function Insights() {
     // Create professional PDF document
     const doc = new jsPDF();
     
-    // Professional color scheme - Grey and Black only
-    const colors = {
-      text: [0, 0, 0],           // Pure black text
-      textMuted: [128, 128, 128], // Grey text
-      background: [245, 245, 245], // Light grey background
-      border: [200, 200, 200],    // Grey border
-      cardBg: [255, 255, 255],    // White cards
-      lightGrey: [240, 240, 240], // Light grey
-      mediumGrey: [180, 180, 180] // Medium grey
-    };
+    // Set page margins
+    const leftMargin = 20;
+    const rightMargin = 190;
+    const textWidth = rightMargin - leftMargin;
+    const pageHeight = 270;
     
-    // === COVER PAGE ===
-    // Professional white-blue gradient background
-    for (let i = 0; i < 50; i++) {
-      const ratio = i / 50;
-      // White to light blue gradient
-      const r = Math.round(255 - (255 - 230) * ratio);
-      const g = Math.round(255 - (255 - 240) * ratio);
-      const b = Math.round(255 - (255 - 255) * ratio);
-      doc.setFillColor(r, g, b);
-      doc.rect(0, i * 2, 210, 2, 'F');
-    }
+    // Clean, professional cover page
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, 210, 297, 'F');
     
-    // App branding with professional font
-    doc.setTextColor(0, 0, 0); // Black text
-    doc.setFontSize(32);
-    doc.setFont('times', 'bold');
-    doc.text('Mental Health Tracker', 105, 40, { align: 'center' });
+    // Top horizontal line
+    doc.setDrawColor(30, 30, 30);
+    doc.setLineWidth(0.5);
+    doc.line(leftMargin, 30, rightMargin, 30);
     
+    // Report title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(24);
+    doc.setTextColor(30, 30, 30);
+    doc.text('TRIGGER EVENTS ANALYSIS', leftMargin, 50);
+    
+    // Report subtitle
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(16);
-    doc.setFont('times', 'normal');
-    doc.setTextColor(128, 128, 128); // Grey text
-    doc.text('Trigger Events Analysis Report', 105, 55, { align: 'center' });
+    doc.setTextColor(80, 80, 80);
+    doc.text('CLINICAL ASSESSMENT', leftMargin, 62);
     
-    // Report metadata card
-    doc.setFillColor(255, 255, 255); // White background
-    doc.setDrawColor(200, 200, 200); // Grey border
-    doc.roundedRect(30, 80, 150, 60, 5, 5, 'FD');
+    // Horizontal separator
+    doc.setDrawColor(100, 100, 100);
+    doc.setLineWidth(0.3);
+    doc.line(leftMargin, 72, rightMargin, 72);
     
-    // Report stats with professional font
-    doc.setTextColor(0, 0, 0); // Black text
-    doc.setFontSize(14);
-    doc.setFont('times', 'bold');
-    doc.text('Report Summary', 105, 95, { align: 'center' });
+    // Report details
+    doc.setFontSize(12);
+    doc.setTextColor(50, 50, 50);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Report Details:', leftMargin, 90);
     
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text('Document ID:', leftMargin, 100);
+    doc.text('Date:', leftMargin, 110);
+    doc.text('Period:', leftMargin, 120);
+    doc.text('Events:', leftMargin, 130);
+    doc.text('Severity Distribution:', leftMargin, 140);
+    
+    const documentId = `TER${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
     const eventCount = filteredTriggerEvents.length;
-    const dateRange = `${new Date().toLocaleDateString()} - ${new Date().toLocaleDateString()}`;
+    const today = new Date();
+    const oneMonthAgo = new Date(today);
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    const dateRange = `${oneMonthAgo.toLocaleDateString()} - ${today.toLocaleDateString()}`;
     
-    doc.setFontSize(11);
-    doc.setFont('times', 'normal');
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 40, 110);
-    doc.text(`Total Events: ${eventCount}`, 40, 120);
-    doc.text(`Date Range: ${dateRange}`, 40, 130);
+    doc.setFont('helvetica', 'bold');
+    doc.text(documentId, 90, 100);
+    doc.text(new Date().toLocaleDateString(), 90, 110);
+    doc.text(dateRange, 90, 120);
+    doc.text(eventCount.toString(), 90, 130);
     
-    // Key insights box
-    if (eventCount > 0) {
-      const emotionCounts = {};
-      filteredTriggerEvents.forEach(event => {
-        event.emotions.forEach(emotion => {
-          emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1;
-        });
+    // Severity statistics
+    const highSeverityCount = filteredTriggerEvents.filter(t => t.emotions.length > 3).length;
+    const mediumSeverityCount = filteredTriggerEvents.filter(t => t.emotions.length > 1 && t.emotions.length <= 3).length;
+    const lowSeverityCount = filteredTriggerEvents.filter(t => t.emotions.length <= 1).length;
+    
+    doc.text(`High: ${highSeverityCount} | Medium: ${mediumSeverityCount} | Low: ${lowSeverityCount}`, 90, 140);
+    
+    // Executive summary
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('EXECUTIVE SUMMARY', leftMargin, 160);
+    
+    doc.setDrawColor(80, 80, 80);
+    doc.setLineWidth(0.2);
+    doc.line(leftMargin, 165, rightMargin, 165);
+    
+    // Summary content
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    
+    let emotionCounts = {};
+    filteredTriggerEvents.forEach(event => {
+      event.emotions.forEach(emotion => {
+        emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1;
       });
-      
-      const topEmotion = Object.entries(emotionCounts).sort((a, b) => b[1] - a[1])[0];
-      
-      doc.setFillColor(245, 245, 245);
-      doc.roundedRect(30, 160, 150, 40, 5, 5, 'FD');
-      
-      doc.setFontSize(12);
-      doc.setFont('times', 'bold');
-      doc.setTextColor(79, 130, 255);
-      doc.text('Key Insights', 40, 175);
-      
-      doc.setFont('times', 'normal');
-      doc.setTextColor(15, 23, 42);
-      if (topEmotion) {
-        doc.text(`Most common emotion: ${topEmotion[0]} (${topEmotion[1]} times)`, 40, 185);
-      }
-      doc.text(`Average events per period: ${(eventCount / 30).toFixed(1)}`, 40, 195);
-    }
+    });
+    
+    const topEmotions = Object.entries(emotionCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([emotion, count]) => `${emotion} (${count})`);
+    
+    const summaryLines = [
+      `This report documents ${eventCount} bipolar disorder trigger events with comprehensive`,
+      `analysis of emotional patterns, negative outcomes, and intervention efficacy.`,
+      '',
+      `Most prevalent emotional states: ${topEmotions.join(', ')}.`,
+      '',
+      `High severity events (${Math.round((highSeverityCount/eventCount)*100)}% of total) suggest periods requiring`,
+      `intensive intervention. Negative outcomes are highlighted for treatment planning.`
+    ];
+    
+    let summaryY = 175;
+    summaryLines.forEach(line => {
+      doc.text(line, leftMargin, summaryY);
+      summaryY += 6;
+    });
+    
+    // Confidentiality notice
+    doc.setFillColor(245, 245, 245);
+    doc.rect(leftMargin, 245, textWidth, 20, 'F');
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.text('CONFIDENTIAL MEDICAL DOCUMENT', leftMargin + 5, 255);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.text('Contains protected health information. Unauthorized disclosure prohibited.', leftMargin + 5, 262);
     
     // Start new page for events
     doc.addPage();
     
-    let yPosition = 30;
-    const pageHeight = 270;
-    const leftMargin = 20;
-    const rightMargin = 190;
-    const textWidth = rightMargin - leftMargin;
+    // Header for events page
+    doc.setFillColor(245, 245, 245);
+    doc.rect(0, 0, 210, 15, 'F');
     
-    // Professional footer with app branding
-    const applyFooter = (pageNum: number) => {
+    doc.setDrawColor(80, 80, 80);
+    doc.setLineWidth(0.3);
+    doc.line(0, 15, 210, 15);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(50, 50, 50);
+    doc.text('DETAILED TRIGGER EVENT ANALYSIS', 105, 10, { align: 'center' });
+    
+    let yPosition = 25;
+    
+    // Add footer to all pages
+    const addFooter = (pageNum: number) => {
       doc.setPage(pageNum);
       
-      // Footer background
-      doc.setFillColor(245, 245, 245); // Light grey background
-      doc.rect(0, 275, 210, 22, 'F');
-      
       // Footer line
-      doc.setDrawColor(128, 128, 128); // Grey line
-      doc.setLineWidth(1);
-      doc.line(20, 278, 190, 278);
+      doc.setDrawColor(80, 80, 80);
+      doc.setLineWidth(0.3);
+      doc.line(leftMargin, 280, rightMargin, 280);
       
-      // Footer content
-      doc.setTextColor(128, 128, 128); // Grey text
-      doc.setFontSize(8);
-      doc.setFont('times', 'normal');
-      doc.text('Mental Health Tracker - Confidential Report', 25, 285);
-      doc.text(`Generated on ${new Date().toLocaleDateString()}`, 25, 290);
+      // Footer text
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Mental Health Tracker - Clinical Documentation', leftMargin, 287);
       
-      // Page number with styling
-      doc.setFillColor(0, 0, 0); // Black background for page number
-      doc.roundedRect(170, 282, 15, 8, 2, 2, 'F');
-      doc.setTextColor(255, 255, 255); // White text on black background
-      doc.setFont('times', 'bold');
-      doc.text(`${pageNum}`, 177.5, 286.5, { align: 'center' });
+      // Page numbers
+      doc.text(`Page ${pageNum} of ${doc.getNumberOfPages()}`, rightMargin - 20, 287);
     };
     
     // === EVENT CARDS ===
