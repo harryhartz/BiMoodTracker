@@ -42,6 +42,7 @@ export const triggerEvents = pgTable("trigger_events", {
   endDate: text("end_date"), // YYYY-MM-DD format, can be null for ongoing
   durationDays: integer("duration_days"), // auto-calculated
   remindLater: boolean("remind_later").default(false),
+  notes: jsonb("notes"), // Additional structured data as JSON
   createdAt: timestamp("created_at").defaultNow(),
 });
 
