@@ -13,7 +13,8 @@ declare global {
 }
 
 // JWT secret - in production, this should be in an environment variable
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// Using a consistent secret for development and production to avoid token validation issues
+const JWT_SECRET = 'BiMoodTracker-jwt-secret-key-2025';
 
 export const generateToken = (userId: number): string => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
