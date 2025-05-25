@@ -24,7 +24,7 @@ export default function NavigationHeader() {
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
               <Brain className="text-white text-lg" />
             </div>
-            <h1 className="text-xl font-semibold text-white">MoodTracker</h1>
+            <h1 className="text-xl font-semibold text-white">BiMoodTracker</h1>
           </div>
           
           {/* Desktop Navigation */}
