@@ -308,7 +308,8 @@ export default function Insights() {
     }
   };
 
-  const exportTriggersPDF = (triggerEvents = filteredTriggerEvents) => {
+  const exportTriggersPDF = () => {
+    const triggerEvents = filteredTriggerEvents;
     // Create professional PDF document
     const doc = new jsPDF();
     
