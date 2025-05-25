@@ -98,7 +98,7 @@ export default function Thoughts() {
       <Card className="bg-slate-800 border-slate-700 mb-6">
         <CardContent className="p-6">
           <h3 className="text-xl font-semibold text-white mb-6">Capture a Thought</h3>
-          
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Thought Content */}
@@ -192,7 +192,7 @@ export default function Thoughts() {
               </Select>
             </div>
           </div>
-          
+
           <div className="space-y-4">
             {filteredThoughts.length === 0 ? (
               <div className="text-center py-8">
@@ -221,7 +221,7 @@ export default function Thoughts() {
                         <p className="text-sm text-slate-400">
                           {formatTimeAgo(new Date(thought.createdAt!))}
                         </p>
-                        {thought.moodTags && thought.moodTags.length > 0 && (
+                        {thought.moodTags && Array.isArray(thought.moodTags) && thought.moodTags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1">
                             {thought.moodTags.map((tag) => (
                               <span
@@ -250,7 +250,7 @@ export default function Thoughts() {
                       </Button>
                     </div>
                   </div>
-                  
+
                   <p className="text-white leading-relaxed">{thought.content}</p>
                 </div>
               ))

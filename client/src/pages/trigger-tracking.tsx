@@ -403,7 +403,7 @@ export default function TriggerTracking() {
                               }
                             </p>
                             
-                            {event.emotions.length > 0 && (
+                            {event.emotions && Array.isArray(event.emotions) && event.emotions.length > 0 && (
                               <div className="flex flex-wrap gap-1">
                                 {event.emotions.slice(0, 3).map((emotion, idx) => {
                                   const emotionData = EMOTION_OPTIONS.find(e => e.value === emotion);
