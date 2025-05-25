@@ -207,7 +207,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.userId!;
       const events = await storage.getTriggerEvents(userId);
-      res.json(events);
+      // Ensure arrays are properly formatted
+      const formattedEvents = events.map(event => ({
+        ...event,
+        emotions: Array.isArray(event.emotions) ? event.emotions : [],
+        consequences: Array.isArray(event.consequences) ? event.consequences : []
+      }));
+      res.json(formattedEvents);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch trigger events" });
     }
@@ -286,7 +292,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.userId!;
       const thoughts = await storage.getThoughts(userId);
-      res.json(thoughts);
+      // Ensure arrays are properly formatted
+      const formattedThoughts = thoughts.map(thought => ({
+        ...thought,
+        moodTags: Array.isArray(thought.moodTags) ? thought.moodTags : []
+      }));
+      res.json(formattedThoughts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch thoughts" });
     }

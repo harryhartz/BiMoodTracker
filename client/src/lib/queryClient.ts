@@ -58,7 +58,18 @@ export async function apiRequest<T = any>(
     for (const key in result) {
       if (result[key] === null || result[key] === undefined) {
         // Convert null/undefined to empty arrays for known array fields
-        if (key === 'moodTags' || key === 'emotions') {
+        if (key === 'moodTags' || key === 'emotions' || key === 'consequences') {
+          result[key] = [];
+        }
+      } else if (typeof result[key] === 'string' && (key === 'moodTags' || key === 'emotions' || key === 'consequences')) {
+        // Handle case where backend returns stringified arrays
+        try {
+          const parsed = JSON.parse(result[key]);
+          if (Array.isArray(parsed)) {
+            result[key] = parsed;
+          }
+        } catch {
+          // If parsing fails, convert to array
           result[key] = [];
         }
       }

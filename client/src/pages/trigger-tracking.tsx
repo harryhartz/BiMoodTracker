@@ -43,7 +43,11 @@ export default function TriggerTracking() {
 
   const { data: triggerEvents = [] } = useQuery<TriggerEvent[]>({
     queryKey: ['/api/trigger-events'],
-    queryFn: () => fetch('/api/trigger-events').then(res => res.json()),
+    queryFn: async () => {
+      const res = await fetch('/api/trigger-events');
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const createTriggerEvent = useMutation({
@@ -405,7 +409,7 @@ export default function TriggerTracking() {
                             
                             {event.emotions && Array.isArray(event.emotions) && event.emotions.length > 0 && (
                               <div className="flex flex-wrap gap-1">
-                                {event.emotions.slice(0, 3).map((emotion, idx) => {
+                                {(Array.isArray(event.emotions) ? event.emotions : []).slice(0, 3).map((emotion, idx) => {
                                   const emotionData = EMOTION_OPTIONS.find(e => e.value === emotion);
                                   return (
                                     <Badge key={idx} variant="secondary" className="text-xs bg-slate-600 text-white">
@@ -424,7 +428,7 @@ export default function TriggerTracking() {
                             <div className="text-xs text-slate-400 border-t border-slate-600 pt-2">
                               <div className="flex justify-between items-center">
                                 <span>Duration: {calculateDuration(event.startDate, event.endDate)}</span>
-                                {event.consequences.length > 0 && (
+                                {Array.isArray(event.consequences) && event.consequences.length > 0 && (
                                   <span>
                                     • {event.consequences.length} outcome{event.consequences.length > 1 ? 's' : ''}
                                   </span>
