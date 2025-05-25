@@ -1,4 +1,5 @@
 import { useAppNavigation } from "@/hooks/use-app-navigation";
+import { useAuth } from "@/hooks/use-auth";
 import { Brain, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -13,6 +14,7 @@ const navItems = [
 
 export default function NavigationHeader() {
   const { navigate, isActive } = useAppNavigation();
+  const { logout } = useAuth();
 
   return (
     <header className="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
@@ -42,8 +44,9 @@ export default function NavigationHeader() {
             ))}
             <Button
               onClick={() => {
-                // Clear any stored auth data and redirect to homepage
-                window.location.href = "/";
+                // Call logout function then redirect to auth page
+                logout();
+                window.location.href = "/auth";
               }}
               variant="outline"
               size="sm"
@@ -77,8 +80,9 @@ export default function NavigationHeader() {
                 ))}
                 <Button
                   onClick={() => {
-                    // Clear any stored auth data and redirect to homepage
-                    window.location.href = "/";
+                    // Call logout function then redirect to auth page
+                    logout();
+                    window.location.href = "/auth";
                   }}
                   variant="outline"
                   size="sm"
