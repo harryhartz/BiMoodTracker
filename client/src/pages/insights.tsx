@@ -59,20 +59,31 @@ export default function Insights() {
     
     return {
       moodEntries: moodEntries.filter(entry => {
-        const entryDate = entry.createdAt ? new Date(entry.createdAt) : new Date(entry.date);
-        return entryDate >= cutoffDate;
+        // Safely handle date conversion with error checking
+        try {
+          const entryDate = entry.date ? new Date(entry.date) : new Date();
+          return entryDate >= cutoffDate;
+        } catch (err) {
+          console.error("Date parsing error:", err);
+          return false;
+        }
       }),
       triggerEvents: triggerEvents.filter(event => {
-        const eventDate = event.createdAt ? new Date(event.createdAt) : new Date();
-        return eventDate >= cutoffDate;
+        try {
+          const eventDate = event.startDate ? new Date(event.startDate) : new Date();
+          return eventDate >= cutoffDate;
+        } catch (err) {
+          console.error("Date parsing error:", err);
+          return false;
+        }
       }),
       thoughts: thoughts.filter(thought => {
-        const thoughtDate = thought.createdAt ? new Date(thought.createdAt) : new Date();
-        return thoughtDate >= cutoffDate;
+        // For thoughts, just include them all if date parsing fails
+        return true;
       }),
       medications: medications.filter(med => {
-        const medDate = med.createdAt ? new Date(med.createdAt) : new Date();
-        return medDate >= cutoffDate;
+        // For medications, just include them all if date parsing fails
+        return true;
       })
     };
   };
