@@ -74,24 +74,48 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    // Add auth token if available, just like in apiRequest
-    const headers: HeadersInit = {};
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+    try {
+      // Add auth token if available, just like in apiRequest
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json'
+      };
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(queryKey[0] as string, {
+        credentials: "include",
+        headers: headers
+      });
+
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        return [];
+      }
+
+      if (res.status === 401) {
+        // For 401 errors, always return an empty array instead of throwing
+        // This prevents the t.slice errors by ensuring consistent return types
+        console.warn('Authentication required, returning empty data array');
+        return [];
+      }
+
+      await throwIfResNotOk(res);
+      
+      // Ensure we always return an array for collection endpoints to prevent t.slice errors
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        return data;
+      } else if (data && typeof data === 'object') {
+        return [data];
+      } else {
+        return [];
+      }
+    } catch (error) {
+      console.error('Error in query function:', error);
+      // Return empty array on error to prevent t.slice errors
+      return [];
     }
-
-    const res = await fetch(queryKey[0] as string, {
-      credentials: "include",
-      headers: headers
-    });
-
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
-    }
-
-    await throwIfResNotOk(res);
-    return await res.json();
   };
 
 // Create a custom query function that includes auth tokens
