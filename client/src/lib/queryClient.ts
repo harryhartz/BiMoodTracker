@@ -94,10 +94,15 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
+// Create a custom query function that includes auth tokens
+const createQueryFn = () => {
+  return getQueryFn({ on401: "throw" });
+};
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
+      queryFn: createQueryFn(),
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: Infinity,
